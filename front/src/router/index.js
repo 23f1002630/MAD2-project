@@ -19,7 +19,7 @@ const router = createRouter({
             component: ProviderReg
         },
         {
-            path: '/register_cust',
+            path: '/customerreg',
             name: 'CustomerReg',
             component: CustomerReg
         },

@@ -27,9 +27,10 @@
             <button type="submit" class="btn btn-primary">Login</button>
           </form>
           <div>
-          <a href="/register_cust">
+          <a href="/customerreg">
             <button class="btn btn-primary">REGISTER</button>
           </a>
+          
           </div>
         </div>
         <div class="mt-4 p-3 rounded bg-white">
