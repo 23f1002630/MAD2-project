@@ -266,6 +266,23 @@ def get_professionals():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/services', methods=['POST'])
+def add_service():
+    data = request.json
+    service_name = data.get('service')
+    description = data.get('description')
+    price = data.get('price')
+
+    if not service_name or not description or not price:
+        return jsonify({'error': 'Missing data'}), 400
+
+    
+    new_service = Services(services=service_name, description=description, price=price)
+    db.session.add(new_service)
+    db.session.commit()
+
+    return jsonify({'id': new_service.id, 'service': new_service.services, 'description': new_service.description, 'price': new_service.price}), 201
+
 
 @app.route("/protected", methods=["GET"])
 @jwt_required()

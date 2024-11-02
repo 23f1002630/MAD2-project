@@ -40,7 +40,8 @@
       </div>
     </div>
     <div class="d-flex justify-content-end mb-4">
-      <button class="btn btn-success btn-sm">+ New Services</button>
+      <button class="btn btn-success btn-sm" @click="mymodal">+ New
+        Services</button>
     </div>
 
     <div class="card mb-4">
@@ -98,17 +99,71 @@
         </table>
       </div>
     </div>
+
+    <!-- Modal -->
+    <div v-show="serviceform" class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="serviceModalLabel">New Service</h1>
+            <button @click="mymodal"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="addService">
+              <div class="mb-3">
+                <label for="service-name" class="col-form-label">Service:</label>
+                <select class="form-control" id="service-name" v-model="newService.service">
+                  <option value="" disabled selected>Select service</option>
+                  <option value="cleaningservices">Cleaning Services</option>
+                  <option value="maintenanceandrepair">Maintenance and Repair</option>
+                  <option value="landscapingandgardening">Landscaping and Gardening</option>
+                  <option value="pestcontrol">Pest Control</option>
+                  <option value="homeimprovementandrenovation">Home Improvement and Renovation</option>
+                  <option value="securityandsafety">Security and Safety</option>
+                  <option value="movingandstorage">Moving and Storage</option>
+                  <option value="specialtyservices">Specialty Services</option>
+                  <option value="organizinganddecluttering">Organizing and Decluttering</option>
+                  <option value="petservices">Pet Services</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="description-text" class="col-form-label">Description:</label>
+                <textarea class="form-control" id="description-text" v-model="newService.description"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="price" class="col-form-label">Price:</label>
+                <input type="text" class="form-control" id="price" v-model="newService.price">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button @click.prevent="serviceform = false" type="button" class="btn btn-secondary"
+              data-bs-dismiss="modal">Cancel</button>
+            <button @click.prevent="addService" type="submit" class="btn btn-primary">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import bootstrap from 'bootstrap/dist/js/bootstrap.bundle.js';
 import axios from 'axios';
 
 export default {
   name: 'AdminDash',
   data() {
     return {
-      professionals: [] // Initialize an empty array to store professionals
+      professionals: [], // Initialize an empty array to store professionals
+      myModal: null,
+      serviceform: false,
+      newService: {
+        "service": '',
+        "description": '',
+        "price": ''
+      }
     };
   },
   mounted() {
@@ -131,15 +186,40 @@ export default {
         console.error("Error fetching professionals:", error);
       }
     },
+    mymodal() {
+      this.myModal = new bootstrap.Modal('#serviceModal', {
+        keyboard: false
+      })
+      this.myModal.show()
+    },
+    async addService() {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.post('http://127.0.0.1:5000/api/services', this.newService, {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        });
+        console.log("Service added:", response.data);
+        // Optionally, refresh the list of services or clear the form
+        this.newService = { service: '', description: '', price: '' };
+        // Close the modal
+        this.myModal.hide()
+  
+        
+      } catch (error) {
+        console.error("Error adding service:", error);
+      }
+    },
     async logout() {
-            localStorage.removeItem('jwt');
-            localStorage.removeItem('role');
-            if (this.$route.path != '/') {
-                this.$router.push('/')
-            }
+      localStorage.removeItem('jwt');
+      localStorage.removeItem('role');
+      if (this.$route.path != '/') {
+        this.$router.push('/')
+      }
     }
   },
-  
 };
 </script>
 

@@ -1,5 +1,5 @@
 from database import db
-
+from datetime import datetime
 
 class user(db.Model):
     __tablename__ = 'user'
@@ -32,10 +32,18 @@ class Customer(db.Model):
     pincode = db.Column(db.Integer, nullable=False)
 
 
+# class Services(db.Model):
+#     __tablename__ = 'services'
+#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+#     services = db.Column(db.String, nullable=False)
+#     price = db.Column(db.Integer, nullable=False)
+#     time = db.Column(db.DateTime)
+#     description = db.Column(db.String, nullable=False)
+
 class Services(db.Model):
     __tablename__ = 'services'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     services = db.Column(db.String, nullable=False)
     price = db.Column(db.Integer, nullable=False)
-    time = db.Column(db.DateTime)
+    time = db.Column(db.DateTime, default=datetime.utcnow)
     description = db.Column(db.String, nullable=False)
