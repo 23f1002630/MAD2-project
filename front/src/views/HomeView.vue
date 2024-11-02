@@ -92,6 +92,14 @@ export default {
                 "role":this.role
               });
             if (response.status === 200) {
+
+              
+              let data = response.data
+              console.log(data.access_token);
+              
+              localStorage.setItem('jwt', data.access_token);
+              localStorage.setItem('role', this.role);
+              // this.$store.commit('setAuthenticatedUser', data);
               if (this.role === 'admin') {
                 this.$router.push('/admindash');
             } else if (this.role === 'customer') {

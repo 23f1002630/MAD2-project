@@ -14,26 +14,24 @@ from flask_cors import CORS
 from datetime import timedelta
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///housedatabase.db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'secret@1234'
 # Setup the Flask-JWT-Extended extension
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///housedatabase.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["JWT_SECRET_KEY"] = "5#y2LF4Q8z\n\xec]/"  # Change this!
-app.config['JWT_COOKIE_SECURE'] = False
-app.config['JWT_TOKEN_LOCATION'] = ['cookies', ]
-app.config['JWT_COOKIE_CSRF_PROTECT'] = False
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+CORS(app, supports_credentials=True)
 jwt = JWTManager(app)
 db.init_app(app)
 app.app_context().push()
 db.create_all()
 
+
 admin_exist = User.query.filter_by(email="hisham@gmail.com").first()
 if not admin_exist:
-    user= User(email="hisham@gmail.com",
-            password=generate_password_hash("hisham999"))
+    user = User(email="hisham@gmail.com",
+                password=generate_password_hash("hisham999"))
     db.session.add(user)
     db.session.commit()
 
@@ -217,7 +215,7 @@ def provider_reg():
         return jsonify({"error": "Experience cannot be empty"}), 400
 
     # Check if email or phone already exists
-    print('emailid',emailid)
+    print('emailid', emailid)
     if Provider.query.filter_by(emailid=emailid).first():
         return jsonify({"error": "Provider email already exists"}), 400
     if Provider.query.filter_by(phone=phone).first():
@@ -248,6 +246,25 @@ def method_name():
     pass
 # Protect a route with jwt_required, which will kick out requests
 # without a valid JWT present.
+
+
+@app.route("/api/professionals", methods=["GET"])
+@jwt_required()
+def get_professionals():
+    try:
+        professionals = Provider.query.all()
+        professionals_list = [
+            {
+                "id": professional.id,
+                "name": professional.fullname,
+                "experience": professional.experience,
+                "service_name": professional.services
+            }
+            for professional in professionals
+        ]
+        return jsonify(professionals_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/protected", methods=["GET"])

@@ -9,8 +9,8 @@ class user(db.Model):
 
 class Provider(db.Model):
     __tablename__ = 'provider'
-    # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    emailid = db.Column(db.String, primary_key=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    emailid = db.Column(db.String, nullable=False)
     password = db.Column(db.String, unique=False, nullable=False)
     phone = db.Column(db.Integer, unique=True)
     fullname = db.Column(db.String, nullable=False)

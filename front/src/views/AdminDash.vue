@@ -6,7 +6,7 @@
         <a href="#" class="mx-2">Home</a>
         <a href="#" class="mx-2">Search</a>
         <a href="#" class="mx-2">Stats</a>
-        <a href="#" class="mx-2">Logout</a>
+        <a class="mx-2" style="cursor:pointer" @click="logout">Logout</a>
       </nav>
     </div>
 
@@ -57,15 +57,14 @@
             </tr>
           </thead>
           <tbody>
-            <!-- Example row -->
-            <tr>
-              <td>1</td>
-              <td>John Doe</td>
-              <td>5</td>
-              <td>Service A</td>
+            <tr v-for="professional in professionals" :key="professional.id">
+              <td>{{ professional.id }}</td>
+              <td>{{ professional.name }}</td>
+              <td>{{ professional.experience }}</td>
+              <td>{{ professional.service_name }}</td>
               <td class="text-center">
                 <button class="btn btn-primary btn-sm me-2">Edit</button>
-                <button class="btn btn-danger btn-sm">Delete</button>
+                <button class="btn btn-danger btn-sm">Block</button>
               </td>
             </tr>
           </tbody>
@@ -103,8 +102,44 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'AdminDash',
+  data() {
+    return {
+      professionals: [] // Initialize an empty array to store professionals
+    };
+  },
+  mounted() {
+    this.fetchProfessionals();
+  },
+  methods: {
+    async fetchProfessionals() {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.get('http://127.0.0.1:5000/api/professionals', {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        });
+
+        console.log("Fetched professionals:", response); // Debugging line
+        this.professionals = response.data;
+      } catch (error) {
+        console.error("Error fetching professionals:", error);
+      }
+    },
+    async logout() {
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('role');
+            if (this.$route.path != '/') {
+                this.$router.push('/')
+            }
+    }
+  },
+  
 };
 </script>
 
