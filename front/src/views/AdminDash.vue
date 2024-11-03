@@ -64,7 +64,8 @@
               <td>{{ professional.experience }}</td>
               <td>{{ professional.service_name }}</td>
               <td class="text-center">
-                <button class="btn btn-primary btn-sm me-2">Edit</button>
+                <button class="btn btn-primary btn-sm me-2">Approve</button>
+                <button class="btn btn-primary btn-sm me-2">Reject</button>
                 <button class="btn btn-danger btn-sm">Block</button>
               </td>
             </tr>

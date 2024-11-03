@@ -17,25 +17,25 @@
               <input v-model="password" type="password" class="form-control" placeholder="Password" />
             </div>
             <div class="form-group mb-2">
-            <select v-model="role" class="form-control">
-              <option value="" disabled selected>Select service</option>
+              <select v-model="role" class="form-control">
+                <option value="" disabled selected>Select Role</option>
                 <option value="admin">Admin</option>
                 <option value="customer">Customer</option>
                 <option value="provider">Provider</option>
-            </select>
+              </select>
             </div>
-            <button type="submit" class="btn btn-primary">Login</button>
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-primary">Login</button>
+              <a href="/customerreg" class="btn btn-primary">REGISTER</a>
+            </div>
           </form>
-          <div>
-          <a href="/customerreg">
-            <button class="btn btn-primary">REGISTER</button>
-          </a>
-          
-          </div>
         </div>
         <div class="mt-4 p-3 rounded bg-white">
           <p class="text-muted custom-font-style">
-            Transform your home into a sanctuary with our premier household services. Our expert team handles cleaning, organizing, and maintenance with unmatched care and reliability. Enjoy peace of mind as we treat your home like our own, allowing you to focus on what truly matters. Experience the ease of a perfectly managed home today!
+            Transform your home into a sanctuary with our premier household services. Our expert team handles cleaning,
+            organizing, and maintenance with unmatched care and reliability. Enjoy peace of mind as we treat your home
+            like our own, allowing you to focus on what truly matters. Experience the ease of a perfectly managed home
+            today!
           </p>
         </div>
       </div>
@@ -70,55 +70,54 @@
 <script>
 import axios from 'axios';
 export default {
-    name: 'HomeView',
-    data() {
-        return {
-            email: '',
-            password: '',
-            role:''
-        }
+  name: 'HomeView',
+  data() {
+    return {
+      email: '',
+      password: '',
+      role: ''
+    }
+  },
+  methods: {
+    closeCard() {
+      this.$router.push('/');
     },
-    methods: {
-        closeCard() {
-            this.$router.push('/');
-        },
-        async login() {
-          try {
-            const response = await axios.post(
-              'http://127.0.0.1:5000/api/login',
-              {
-                "email": this.email,
-                "password": this.password,
-                "role":this.role
-              });
-            if (response.status === 200) {
+    async login() {
+      try {
+        const response = await axios.post(
+          'http://127.0.0.1:5000/api/login',
+          {
+            "email": this.email,
+            "password": this.password,
+            "role": this.role
+          });
+        if (response.status === 200) {
+          let data = response.data
+          console.log(data.access_token);
 
-              
-              let data = response.data
-              console.log(data.access_token);
-              
-              localStorage.setItem('jwt', data.access_token);
-              localStorage.setItem('role', this.role);
-              // this.$store.commit('setAuthenticatedUser', data);
-              if (this.role === 'admin') {
-                this.$router.push('/admindash');
-            } else if (this.role === 'customer') {
-              this.$router.push('/cust_dashboard' ); }
-              else if (this.role === 'provider') {
-                this.$router.push('/providerdash');
-              }
-          } 
-          else {
-              alert(response.data.error);
-              throw new Error(response.data.error);
-            }}
-          catch (error) {
-            alert(error)
-            console.error('Fetch error:', error);
-            alert('Login failed. Please check your credentials and try again.');
+          localStorage.setItem('jwt', data.access_token);
+          localStorage.setItem('role', this.role);
+          if (this.role === 'admin') {
+            this.$router.push('/admindash');
+          } else if (this.role === 'customer') {
+            this.$router.push('/cust_dashboard');
+          }
+          else if (this.role === 'provider') {
+            this.$router.push('/providerdash');
           }
         }
+        else {
+          alert(response.data.error);
+          throw new Error(response.data.error);
+        }
+      }
+      catch (error) {
+        alert(error)
+        console.error('Fetch error:', error);
+        alert('Login failed. Please check your credentials and try again.');
+      }
     }
+  }
 }
 </script>
 
@@ -128,14 +127,17 @@ export default {
   overflow: hidden;
   border: 1px solid #ddd;
 }
+
 .container {
   max-width: 1200px;
 }
+
 * {
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
+
 .custom-font-style {
-  font-style: italic; /* Change to your desired font style */
-  font-weight: 700; /* Adjust font weight if needed */
+  font-style: italic;
+  font-weight: 700;
 }
 </style>
