@@ -64,8 +64,9 @@
               <td>{{ professional.experience }}</td>
               <td>{{ professional.service_name }}</td>
               <td class="text-center">
-                <button class="btn btn-primary btn-sm me-2">Approve</button>
-                <button class="btn btn-primary btn-sm me-2">Reject</button>
+                <button class="btn btn-primary btn-sm me-2"
+                  @click="approveProfessional(professional.id)">Approve</button>
+                <button class="btn btn-primary btn-sm me-2" @click="rejectProfessional(professional.id)">Reject</button>
                 <button class="btn btn-danger btn-sm">Block</button>
               </td>
             </tr>
@@ -271,6 +272,46 @@ export default {
         console.error("Error adding service:", error);
       }
     },
+    async approveProfessional(id) {
+      const your_jwt_token = localStorage.getItem('jwt');
+
+      if (!your_jwt_token) {
+        console.error('JWT token is missing');
+        return;
+      }
+
+      const response = await axios.post(`http://127.0.0.1:5000/api/approveprofessional/${id}`, {}, {
+        headers: {
+          Authorization: `Bearer ${your_jwt_token}`
+        },
+        withCredentials: true
+      })
+        .then(response => {
+          this.fetchProfessionals();
+        })
+        .catch(error => {
+          console.error('Error approving professional:', error);
+        });
+    },
+  
+    async rejectProfessional(id) {
+
+      let your_jwt_token = localStorage.getItem('jwt');
+      const response = await axios.post(`http://127.0.0.1:5000/api/rejectprofessional/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        }).then(response => {
+          this.fetchProfessionals()
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    },
+
     updateService(serviceDetails) {
 
       let your_jwt_token = localStorage.getItem('jwt');
@@ -323,6 +364,8 @@ export default {
           console.error(error);
         });
     },
+
+
 
     startEditing(id) {
       this.showEditModal()

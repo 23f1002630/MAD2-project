@@ -12,6 +12,16 @@ from flask_jwt_extended import jwt_required, set_access_cookies
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from datetime import timedelta
+from celery.schedules import crontab
+# from config import LocalDevelopmentConfig
+from celery import Celery
+from send_mail import init_mail
+from flask_mail import Message
+from flask_sse import sse
+from functools import wraps
+
+from cache import Cache
+
 
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
@@ -21,7 +31,17 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///housedatabase.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["JWT_SECRET_KEY"] = "5#y2LF4Q8z\n\xec]/"  # Change this!
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-CORS(app, supports_credentials=True)
+app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+app.config['JWT_TOKEN_LOCATION'] = ['headers']  ###CHANGE NEW
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/1'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/2'
+app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True
+app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'
+
+cache = Cache(app)
+
+# CORS(app, supports_credentials=True)
+CORS(app, origins='http://localhost:5173',supports_credentials=True)
 jwt = JWTManager(app)
 db.init_app(app)
 app.app_context().push()
@@ -74,6 +94,43 @@ if not admin_exist:
 #     else:
 #         # Return error if the user doesn't exist
 #         return jsonify(error="User not found"), 404
+
+# ------- Celery app ------- #
+celery = Celery('Application')
+
+# Update celery app configurations
+celery.conf.update(
+    broker_url=app.config["CELERY_BROKER_URL"],
+    result_backend=app.config["CELERY_RESULT_BACKEND"],
+    timezone=app.config["CELERY_TIMEZONE"],
+    broker_connection_retry_on_startup=app.config["BROKER_CONNECTION_RETRY_ON_STARTUP"]
+)
+celery.conf.timezone = 'Asia/Kolkata'
+
+
+@celery.task()
+def monthly_report():
+    print('monthly report to users executed')
+    return {'message': "Monthly report to users executed"}
+
+
+@celery.task()
+def user_triggered_async_job():
+    print('user triggered async job executed')
+    return {'message': "User triggered async job executed"}
+
+
+# ------- To schedule the tasks --------#
+celery.conf.beat_schedule = {
+    'my_daily_task': {
+        'task': "main.monthly_report",
+        'schedule': crontab(hour=21, minute=0),
+    },
+    'my_quick_check_task': {
+        'task': "main.monthly_report",
+        'schedule': crontab(minute='*/1'),
+ },
+}
 
 
 @app.route("/api/login", methods=["POST"])
@@ -258,14 +315,16 @@ def get_professionals():
                 "id": professional.id,
                 "name": professional.fullname,
                 "experience": professional.experience,
-                "service_name": professional.services
+                "service_name": professional.services,
+                "status": professional.status
             }
             for professional in professionals
         ]
         return jsonify(professionals_list), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route("/api/services", methods=["GET"])
 @jwt_required()
 def get_services():
@@ -286,35 +345,102 @@ def get_services():
 
 
 # function for getting details of single service for editing/view purpose
-@app.route('/api/services/<id>',methods=["GET"])
+@app.route('/api/services/<id>', methods=["GET"])
 @jwt_required()
 def get_service_details(id):
     try:
         service = Services.query.get(id)
-        service_details ={
-                "id": service.id,
-                "services": service.services,
-                "description": service.description,
-                "price": service.price
-            }
-            
-        
+        service_details = {
+            "id": service.id,
+            "services": service.services,
+            "description": service.description,
+            "price": service.price
+        }
+
         return jsonify(service_details), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500   
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/api/services/<id>',methods=["PUT"])
+@app.route('/api/professionalblock/<id>', methods=["POST"])
+@jwt_required()
+def block_professional(id):
+    try:
+        professional = Provider.query.get(id)
+        professional.isblock = not professional.isblock
+        db.session.commit()
+        return jsonify({"message": "Professional blocked successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/customerblock/<id>', methods=["POST"])
+@jwt_required()
+def block_customer(id):
+    try:
+        customer = Customer.query.get(id)
+        customer.isblock = not customer.isblock
+        db.session.commit()
+        return jsonify({"message": "Customer blocked successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/deleteprofessional/<id>', methods=["DELETE"])
+@jwt_required()
+def delete_professional(id):
+    try:
+        professional = Provider.query.get(id)
+        db.session.delete(professional)
+        db.session.commit()
+        return jsonify({"message": "Professional deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/deletecustomer/<id>', methods=["DELETE"])
+@jwt_required()
+def delete_customer(id):
+    try:
+        customer = Customer.query.get(id)
+        db.session.delete(customer)
+        db.session.commit()
+        return jsonify({"message": "Customer deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/approveprofessional/<id>', methods=["POST"])
+@jwt_required(id)
+def approve_professional(id):
+    try:
+        print('id', id)
+        professional = Provider.query.get(id)
+        professional.status = "Approved"
+        print('professional', professional)
+        db.session.commit()
+        return jsonify({"message": "Professional approved successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/rejectprofessional/<id>', methods=["POST"])
+@jwt_required()
+def reject_professional(id):
+    try:
+        professional = Provider.query.get(id)
+        professional.status = "Rejected"
+        db.session.commit()
+        return jsonify({"message": "Professional rejected successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/services/<id>', methods=["PUT"])
 @jwt_required()
 def update_service(id):
     try:
         # fetched service with id
         service = Services.query.get(id)
-        # get form data 
+        # get form data
         data = request.json
         # editing values of db data
-        service.services=data.get('services')
-        service.description=data.get('description')
-        service.price=data.get('price')
+        service.services = data.get('services')
+        service.description = data.get('description')
+        service.price = data.get('price')
         # saving new data to db
         db.session.commit()
         service_data = {
@@ -325,17 +451,20 @@ def update_service(id):
         }
         return jsonify(service_data), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/services/<int:service_id>', methods=['DELETE'])
+@jwt_required()
 def delete_service(service_id):
-  service = Services.query.get(service_id)
-  if service is None:
-      return jsonify({'error': 'Service not found'}), 404
+    service = Services.query.get(service_id)
+    if service is None:
+        return jsonify({'error': 'Service not found'}), 404
 
-  db.session.delete(service)
-  db.session.commit()
-  return jsonify({'message': 'Service deleted successfully'}), 200
+    db.session.delete(service)
+    db.session.commit()
+    return jsonify({'message': 'Service deleted successfully'}), 200
+
 
 @app.route('/api/services', methods=['POST'])
 def add_service():
@@ -347,8 +476,8 @@ def add_service():
     if not service_name or not description or not price:
         return jsonify({'error': 'Missing data'}), 400
 
-    
-    new_service = Services(services=service_name, description=description, price=price)
+    new_service = Services(services=service_name,
+                           description=description, price=price)
     db.session.add(new_service)
     db.session.commit()
 
@@ -364,4 +493,4 @@ def protected():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

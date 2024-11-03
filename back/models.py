@@ -19,6 +19,8 @@ class Provider(db.Model):
     address = db.Column(db.String, nullable=False)
     pincode = db.Column(db.Integer, nullable=False)
     experience = db.Column(db.Integer, nullable=True)
+    status = db.Column(db.String, default="pending")
+    isblocked = db.Column(db.Integer, default=0)
 
 
 class Customer(db.Model):
@@ -30,6 +32,7 @@ class Customer(db.Model):
     phone = db.Column(db.Integer, nullable=False, unique=True)
     address = db.Column(db.String, nullable=False)
     pincode = db.Column(db.Integer, nullable=False)
+    isblocked = db.Column(db.Integer, default=0)
 
 
 # class Services(db.Model):
