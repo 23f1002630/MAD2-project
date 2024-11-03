@@ -31,7 +31,7 @@
               <td>{{ service.price }}</td>
               <td>{{ service.description }}</td>
               <td class="text-center">
-                <button class="btn btn-primary btn-sm me-2">Edit</button>
+                <button class="btn btn-primary btn-sm me-2" @click="startEditing(service.id)">Edit</button>
                 <button class="btn btn-danger btn-sm">Delete</button>
               </td>
             </tr>
@@ -145,6 +145,52 @@
         </div>
       </div>
     </div>
+    <!-- edit service Modal -->
+    <div v-show="editServiceModal" class="modal fade" id="serviceseditModal" tabindex="-1"
+      aria-labelledby="serviceModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="serviceModalLabel">Update Service</h1>
+
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="updateService(serviceseditDetails)">
+              <div class="mb-3">
+                <label for="service-name" class="col-form-label">Service:</label>
+                <select class="form-control" id="service-name" v-model="serviceseditDetails.services">
+                  <option value="" disabled selected>Select service</option>
+                  <option value="cleaningservices">Cleaning Services</option>
+                  <option value="maintenanceandrepair">Maintenance and Repair</option>
+                  <option value="landscapingandgardening">Landscaping and Gardening</option>
+                  <option value="pestcontrol">Pest Control</option>
+                  <option value="homeimprovementandrenovation">Home Improvement and Renovation</option>
+                  <option value="securityandsafety">Security and Safety</option>
+                  <option value="movingandstorage">Moving and Storage</option>
+                  <option value="specialtyservices">Specialty Services</option>
+                  <option value="organizinganddecluttering">Organizing and Decluttering</option>
+                  <option value="petservices">Pet Services</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="description-text" class="col-form-label">Description:</label>
+                <textarea class="form-control" id="description-text"
+                  v-model="serviceseditDetails.description"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="price" class="col-form-label">Price:</label>
+                <input type="text" class="form-control" id="price" v-model="serviceseditDetails.price">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button @click.prevent="serviceform = false" type="button" class="btn btn-secondary"
+              data-bs-dismiss="modal">Cancel</button>
+            <button @click="updateService(serviceseditDetails)" type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -158,8 +204,10 @@ export default {
     return {
       professionals: [], // Initialize an empty array to store professionals
       services: [],
+      serviceseditDetails: {},
       myModal: null,
       serviceform: false,
+      editServiceModal: null,
       newService: {
         "service": '',
         "description": '',
@@ -194,6 +242,12 @@ export default {
       })
       this.myModal.show()
     },
+    showEditModal() {
+      this.editServiceModal = new bootstrap.Modal('#serviceseditModal', {
+        keyboard: false
+      })
+      this.editServiceModal.show()
+    },
     async addService() {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
@@ -216,6 +270,27 @@ export default {
         console.error("Error adding service:", error);
       }
     },
+    updateService(serviceDetails) {
+
+      let your_jwt_token = localStorage.getItem('jwt');
+      const response = axios.put('http://127.0.0.1:5000/api/services/' + serviceDetails.id,
+        // passing data to server
+        serviceDetails,
+        // passing header details
+        {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        }).then(response => {
+          this.fetchServices()
+          this.editServiceModal.hide()
+
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    },
     fetchServices() {
 
       let your_jwt_token = localStorage.getItem('jwt');
@@ -231,6 +306,26 @@ export default {
           console.error(error);
         });
 
+    },
+
+    getServiceDetails(id) {
+      let your_jwt_token = localStorage.getItem('jwt');
+      const response = axios.get('http://127.0.0.1:5000/api/services/' + id, {
+        headers: {
+          Authorization: `Bearer ${your_jwt_token}`
+        },
+        withCredentials: true
+      }).then(response => {
+        this.serviceseditDetails = response.data;
+      })
+        .catch(error => {
+          console.error(error);
+        });
+    },
+
+    startEditing(id) {
+      this.showEditModal()
+      this.getServiceDetails(id)
     },
     async logout() {
       localStorage.removeItem('jwt');

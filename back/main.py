@@ -284,6 +284,50 @@ def get_services():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# function for getting details of single service for editing/view purpose
+@app.route('/api/services/<id>',methods=["GET"])
+@jwt_required()
+def get_service_details(id):
+    try:
+        service = Services.query.get(id)
+        service_details ={
+                "id": service.id,
+                "services": service.services,
+                "description": service.description,
+                "price": service.price
+            }
+            
+        
+        return jsonify(service_details), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500   
+
+@app.route('/api/services/<id>',methods=["PUT"])
+@jwt_required()
+def update_service(id):
+    try:
+        # fetched service with id
+        service = Services.query.get(id)
+        # get form data 
+        data = request.json
+        # editing values of db data
+        service.services=data.get('services')
+        service.description=data.get('description')
+        service.price=data.get('price')
+        # saving new data to db
+        db.session.commit()
+        service_data = {
+            "id": service.id,
+            "services": service.services,
+            "description": service.description,
+            "price": service.price,
+        }
+        return jsonify(service_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 
+
+
 @app.route('/api/services', methods=['POST'])
 def add_service():
     data = request.json
