@@ -265,6 +265,24 @@ def get_professionals():
         return jsonify(professionals_list), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/services", methods=["GET"])
+@jwt_required()
+def get_services():
+    try:
+        services = Services.query.all()
+        services_list = [
+            {
+                "id": service.id,
+                "services": service.services,
+                "description": service.description,
+                "price": service.price
+            }
+            for service in services
+        ]
+        return jsonify(services_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/services', methods=['POST'])
 def add_service():

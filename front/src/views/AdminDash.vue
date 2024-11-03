@@ -25,11 +25,11 @@
           </thead>
           <tbody>
             <!-- Example row -->
-            <tr>
-              <td>1</td>
-              <td>Service A</td>
-              <td>\$100</td>
-              <td>Service A Description</td>
+            <tr v-for="service in services" :key="service.id">
+              <td>{{ service.id }}</td>
+              <td>{{ service.services }}</td>
+              <td>{{ service.price }}</td>
+              <td>{{ service.description }}</td>
               <td class="text-center">
                 <button class="btn btn-primary btn-sm me-2">Edit</button>
                 <button class="btn btn-danger btn-sm">Delete</button>
@@ -157,6 +157,7 @@ export default {
   data() {
     return {
       professionals: [], // Initialize an empty array to store professionals
+      services: [],
       myModal: null,
       serviceform: false,
       newService: {
@@ -168,6 +169,7 @@ export default {
   },
   mounted() {
     this.fetchProfessionals();
+    this.fetchServices();
   },
   methods: {
     async fetchProfessionals() {
@@ -197,7 +199,8 @@ export default {
         let your_jwt_token = localStorage.getItem('jwt');
         const response = await axios.post('http://127.0.0.1:5000/api/services', this.newService, {
           headers: {
-            Authorization: `Bearer ${your_jwt_token}`
+            Authorization: `Bearer ${your_jwt_token}`,
+            Accept: 'application/json'
           },
           withCredentials: true
         });
@@ -206,11 +209,28 @@ export default {
         this.newService = { service: '', description: '', price: '' };
         // Close the modal
         this.myModal.hide()
-  
-        
+        this.fetchServices();
+
+
       } catch (error) {
         console.error("Error adding service:", error);
       }
+    },
+    fetchServices() {
+
+      let your_jwt_token = localStorage.getItem('jwt');
+      const response = axios.get('http://127.0.0.1:5000/api/services', {
+        headers: {
+          Authorization: `Bearer ${your_jwt_token}`
+        },
+        withCredentials: true
+      }).then(response => {
+        this.services = response.data;
+      })
+        .catch(error => {
+          console.error(error);
+        });
+
     },
     async logout() {
       localStorage.removeItem('jwt');
