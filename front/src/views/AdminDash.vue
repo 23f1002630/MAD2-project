@@ -32,7 +32,7 @@
               <td>{{ service.description }}</td>
               <td class="text-center">
                 <button class="btn btn-primary btn-sm me-2" @click="startEditing(service.id)">Edit</button>
-                <button class="btn btn-danger btn-sm">Delete</button>
+                <button class="btn btn-danger btn-sm" @click="deleteService(service.id)">Delete</button>
               </td>
             </tr>
           </tbody>
@@ -326,6 +326,21 @@ export default {
     startEditing(id) {
       this.showEditModal()
       this.getServiceDetails(id)
+    },
+    async deleteService(id) {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.delete('http://127.0.0.1:5000/api/services/' + id, {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        });
+        console.log("Service deleted:", response.data);
+        this.fetchServices();
+      } catch (error) {
+        console.error("Error deleting service:", error);
+      }
     },
     async logout() {
       localStorage.removeItem('jwt');

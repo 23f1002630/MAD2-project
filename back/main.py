@@ -327,6 +327,15 @@ def update_service(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500 
 
+@app.route('/api/services/<int:service_id>', methods=['DELETE'])
+def delete_service(service_id):
+  service = Services.query.get(service_id)
+  if service is None:
+      return jsonify({'error': 'Service not found'}), 404
+
+  db.session.delete(service)
+  db.session.commit()
+  return jsonify({'message': 'Service deleted successfully'}), 200
 
 @app.route('/api/services', methods=['POST'])
 def add_service():
