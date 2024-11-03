@@ -30,3 +30,4 @@ back/.env
 *__pycache__
 *.vite
 *.zip
+*env
