@@ -32,11 +32,15 @@
           </div>
         </div>
         <div class="row mb-3">
-          <!-- <div class="col">
-            <input type="password" class="form-control" placeholder="Confirm password" />
-          </div> -->
           <div class="col">
-            <input type="file" class="form-control" placeholder="Attach document" accept="application/pdf" @change="handleFileUpload" />
+            <label for="image" class="form-label">Choose image</label>
+            <input type="file" class="form-control" placeholder="Image" accept="image/png, image/jpeg"
+              @change="handleImageUpload" />
+          </div>
+          <div class="col">
+            <label for="file" class="form-label">Choose file</label>
+            <input type="file" class="form-control" placeholder="Attach document" accept="application/pdf"
+              @change="handleFileUpload" />
           </div>
         </div>
         <div class="row mb-3">
@@ -126,12 +130,18 @@ export default {
       phone: '',
       experience: '',
       services: '',
-      file: null, // Add a data property for the file
+      file: null,
+      image: null // Add a data property for the file
     };
   },
   methods: {
     handleFileUpload(event) {
       this.file = event.target.files[0]; // Get the file from the input
+    },
+    handleImageUpload(event) {
+      console.log('starting')
+      this.image = event.target.files[0]; // Get the file from the input
+      console.log('ended')
     },
     async register() {
       try {
@@ -145,6 +155,8 @@ export default {
         formData.append('experience', this.experience);
         formData.append('services', this.services);
         formData.append('file', this.file); // Append the file
+        formData.append('image', this.image);
+        console.log('Hisham');
 
         const response = await axios.post('http://127.0.0.1:5000/provider/register', formData, {
           headers: {
@@ -152,7 +164,7 @@ export default {
           },
         });
 
-        console.log(this.emailid, this.password, this.fullname, this.phone, this.address, this.pincode, this.experience, this.services, this.file);
+        console.log(this.emailid, this.password, this.fullname, this.phone, this.address, this.pincode, this.experience, this.services, this.file, this.image);
 
         if (response.status === 201) {
           this.$router.push('/');
@@ -175,6 +187,7 @@ export default {
   border-radius: 10px;
   background-color: #f9f9f9;
 }
+
 * {
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }

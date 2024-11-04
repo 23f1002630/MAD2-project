@@ -33,7 +33,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["JWT_SECRET_KEY"] = "5#y2LF4Q8z\n\xec]/"  # Change this!
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 app.config['JWT_COOKIE_CSRF_PROTECT'] = False
-app.config['JWT_TOKEN_LOCATION'] = ['headers']  ###CHANGE NEW
+app.config['JWT_TOKEN_LOCATION'] = ['headers']  # CHANGE NEW
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/1'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/2'
 app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True
@@ -42,7 +42,7 @@ app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'
 cache = Cache(app)
 
 # CORS(app, supports_credentials=True)
-CORS(app, origins='http://localhost:5173',supports_credentials=True)
+CORS(app, origins='http://localhost:5173', supports_credentials=True)
 jwt = JWTManager(app)
 db.init_app(app)
 app.app_context().push()
@@ -130,7 +130,7 @@ celery.conf.beat_schedule = {
     'my_quick_check_task': {
         'task': "main.monthly_report",
         'schedule': crontab(minute='*/1'),
- },
+    },
 }
 
 
@@ -150,9 +150,9 @@ def login():
     if role == "admin":
         user = User.query.filter_by(email=email).first()
     elif role == "customer":
-        user = Customer.query.filter_by(emailid=email).first()
+        user = Customer.query.filter_by(emailid=email,isblocked=False).first()
     elif role == "provider":
-        user = Provider.query.filter_by(emailid=email).first()
+        user = Provider.query.filter_by(emailid=email,isblocked=False).first()
     else:
         return jsonify(error="Invalid role"), 400
 
@@ -244,7 +244,7 @@ def cust_reg():
 #         address = data.address
 #         pincode = data.pincode
 
-# old one 
+# old one
 # @app.route("/provider/register", methods=['POST'])
 # def provider_reg():
 #     if request.method != "POST":
@@ -301,70 +301,80 @@ def cust_reg():
 
 #     return jsonify({"msg": "Provider registration successful", "emailid": emailid}), 201
 
+
 @app.route("/provider/register", methods=['POST'])
 def provider_reg():
-  if request.method != "POST":
-      return jsonify({"error": "Invalid request method"}), 405
+    if request.method != "POST":
+        return jsonify({"error": "Invalid request method"}), 405
 
-  # Get form data
-  emailid = request.form.get("emailid")
-  password = request.form.get("password")
-  fullname = request.form.get("fullname")
-  phone = request.form.get("phone")
-  address = request.form.get("address")
-  pincode = request.form.get("pincode")
-  services = request.form.get("services")
-  experience = request.form.get("experience")
-  file = request.files.get("file")
+    # Get form data
+    emailid = request.form.get("emailid")
+    password = request.form.get("password")
+    fullname = request.form.get("fullname")
+    phone = request.form.get("phone")
+    address = request.form.get("address")
+    pincode = request.form.get("pincode")
+    services = request.form.get("services")
+    experience = request.form.get("experience")
+    file = request.files.get("file")
+    image = request.files.get("image")
+    print('image', image, emailid)
 
-  # Validate required fields
-  if not password or password.strip() == "":
-      return jsonify({"error": "Password cannot be empty"}), 400
-  if not fullname or fullname.strip() == "":
-      return jsonify({"error": "Full name cannot be empty"}), 400
-  if not phone:
-      return jsonify({"error": "Phone number cannot be empty"}), 400
-  if not services:
-      return jsonify({"error": "Services cannot be empty"}), 400
-  if not experience:
-      return jsonify({"error": "Experience cannot be empty"}), 400
+    # Validate required fields
+    if not password or password.strip() == "":
+        return jsonify({"error": "Password cannot be empty"}), 400
+    if not fullname or fullname.strip() == "":
+        return jsonify({"error": "Full name cannot be empty"}), 400
+    if not phone:
+        return jsonify({"error": "Phone number cannot be empty"}), 400
+    if not services:
+        return jsonify({"error": "Services cannot be empty"}), 400
+    if not experience:
+        return jsonify({"error": "Experience cannot be empty"}), 400
 
-  # Check if email or phone already exists
-  if Provider.query.filter_by(emailid=emailid).first():
-      return jsonify({"error": "Provider email already exists"}), 400
-  if Provider.query.filter_by(phone=phone).first():
-      return jsonify({"error": "Phone number already exists"}), 400
+    # Check if email or phone already exists
+    if Provider.query.filter_by(emailid=emailid).first():
+        return jsonify({"error": "Provider email already exists"}), 400
+    if Provider.query.filter_by(phone=phone).first():
+        return jsonify({"error": "Phone number already exists"}), 400
 
-  # Hash the password
-  hashed_password = generate_password_hash(password)
+    # Hash the password
+    hashed_password = generate_password_hash(password)
 
-  # Save the file if it exists
-  if file:
-      print('test')
-    #   filename = secure_filename(file.filename)
-      filename = fullname.replace(' ', '_') + '.pdf'
-      file_path = os.path.join('static', filename)
-      file.save(file_path)
-  else:
-      return jsonify({"error": "File is required"}), 400
+    # Save the file if it exists
+    if file:
+        filename = fullname.replace(' ', '_') + '.pdf'
+        file_path = os.path.join('static', filename)
+        file.save(file_path)
+    else:
+        return jsonify({"error": "File is required"}), 400
 
-  # Create a new provider
-  new_provider = Provider(
-      emailid=emailid,
-      password=hashed_password,
-      fullname=fullname,
-      phone=phone,
-      address=address,
-      pincode=pincode,
-      services=services,
-      experience=experience,
-      file=file_path  # Store the file path in the database
-  )
+    if image:
+        filename = fullname.replace(' ', '_') + '.jpg'
+        image_path = os.path.join('static', filename)
+        image.save(image_path)
+        print('image_path', image_path)
+    else:
+        return jsonify({"error": "Image is required"}), 400
+    # Create a new provider
+    new_provider = Provider(
+        emailid=emailid,
+        password=hashed_password,
+        fullname=fullname,
+        phone=phone,
+        address=address,
+        pincode=pincode,
+        services=services,
+        experience=experience,
+        file=file_path,
+        image=image_path
+    )
 
-  db.session.add(new_provider)
-  db.session.commit()
+    db.session.add(new_provider)
+    db.session.commit()
 
-  return jsonify({"msg": "Provider registration successful", "emailid": emailid}), 201
+    return jsonify({"msg": "Provider registration successful", "emailid": emailid}), 201
+
 
 def method_name():
     pass
@@ -428,6 +438,7 @@ def get_service_details(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/api/professionalblock/<id>', methods=["POST"])
 @jwt_required()
 def block_professional(id):
@@ -439,6 +450,7 @@ def block_professional(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/api/customerblock/<id>', methods=["POST"])
 @jwt_required()
 def block_customer(id):
@@ -449,7 +461,8 @@ def block_customer(id):
         return jsonify({"message": "Customer blocked successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route('/api/deleteprofessional/<id>', methods=["DELETE"])
 @jwt_required()
 def delete_professional(id):
@@ -461,6 +474,7 @@ def delete_professional(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/api/deletecustomer/<id>', methods=["DELETE"])
 @jwt_required()
 def delete_customer(id):
@@ -471,7 +485,8 @@ def delete_customer(id):
         return jsonify({"message": "Customer deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route('/api/approveprofessional/<id>', methods=["POST"])
 @jwt_required(id)
 def approve_professional(id):
@@ -484,7 +499,8 @@ def approve_professional(id):
         return jsonify({"message": "Professional approved successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route('/api/rejectprofessional/<id>', methods=["POST"])
 @jwt_required()
 def reject_professional(id):
@@ -495,6 +511,7 @@ def reject_professional(id):
         return jsonify({"message": "Professional rejected successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/services/<id>', methods=["PUT"])
 @jwt_required()

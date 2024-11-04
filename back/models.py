@@ -16,6 +16,7 @@ class Provider(db.Model):
     fullname = db.Column(db.String, nullable=False)
     services = db.Column(db.String, nullable=False)
     file = db.Column(db.String)
+    image = db.Column(db.String)
     address = db.Column(db.String, nullable=False)
     pincode = db.Column(db.Integer, nullable=False)
     experience = db.Column(db.Integer, nullable=True)
