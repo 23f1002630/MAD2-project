@@ -1,15 +1,8 @@
 <template>
   <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2>Admin Dashboard</h2>
-      <nav>
-        <a href="#" class="mx-2">Home</a>
-        <a href="#" class="mx-2">Search</a>
-        <a href="#" class="mx-2">Stats</a>
-        <a class="mx-2" style="cursor:pointer" @click="logout">Logout</a>
-      </nav>
-    </div>
-
+    <header>
+      <AdminBar />
+    </header>
     <div class="card mb-2">
       <div class="card-header">Services</div>
       <div class="card-body">
@@ -67,7 +60,7 @@
                 <button class="btn btn-primary btn-sm me-2"
                   @click="approveProfessional(professional.id)">Approve</button>
                 <button class="btn btn-primary btn-sm me-2" @click="rejectProfessional(professional.id)">Reject</button>
-                <button class="btn btn-danger btn-sm">Block</button>
+                <button class="btn btn-danger btn-sm" @click="viewProfessional(professional.id)">View file</button>
               </td>
             </tr>
           </tbody>
@@ -199,9 +192,13 @@
 <script>
 import bootstrap from 'bootstrap/dist/js/bootstrap.bundle.js';
 import axios from 'axios';
+import AdminBar from '../components/AdminBar.vue';
 
 export default {
   name: 'AdminDash',
+  components: {
+    AdminBar
+  },
   data() {
     return {
       professionals: [], // Initialize an empty array to store professionals
@@ -272,6 +269,7 @@ export default {
         console.error("Error adding service:", error);
       }
     },
+
     async approveProfessional(id) {
       const your_jwt_token = localStorage.getItem('jwt');
 
@@ -293,7 +291,7 @@ export default {
           console.error('Error approving professional:', error);
         });
     },
-  
+
     async rejectProfessional(id) {
 
       let your_jwt_token = localStorage.getItem('jwt');
@@ -311,6 +309,7 @@ export default {
           console.error(error);
         });
     },
+
 
     updateService(serviceDetails) {
 

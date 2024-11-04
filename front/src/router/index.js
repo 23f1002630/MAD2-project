@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue';
 import ProviderReg from '../views/ProviderReg.vue';
 import CustomerReg from '../views/CustomerReg.vue';
 import AdminDash from '../views/AdminDash.vue';
+import ProviderDash from '../views/ProviderDash.vue';
 
 
 const router = createRouter({
@@ -27,6 +28,11 @@ const router = createRouter({
             path: '/admindash',
             name: 'AdminDash',
             component: AdminDash
+        },
+        {
+            path: '/providerdash',
+            name: 'ProviderDash',
+            component: ProviderDash
         }
 
     ]

@@ -511,6 +511,15 @@ def reject_professional(id):
         return jsonify({"message": "Professional rejected successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# @app.route('/viewpdf/<filename>')
+# def view_pdf(filename):
+#   try:
+#       # Assuming the PDF files are stored in a directory named 'pdfs'
+#       file_path = f'static/{filename}'
+#       return send_file(file_path, as_attachment=False)
+#   except FileNotFoundError:
+#       abort(404, description="Resource not found")
 
 
 @app.route('/api/services/<id>', methods=["PUT"])
