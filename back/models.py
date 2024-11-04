@@ -15,7 +15,7 @@ class Provider(db.Model):
     phone = db.Column(db.Integer, unique=True)
     fullname = db.Column(db.String, nullable=False)
     services = db.Column(db.String, nullable=False)
-    # file = db.Column(db.String, nullable=False)
+    file = db.Column(db.String)
     address = db.Column(db.String, nullable=False)
     pincode = db.Column(db.Integer, nullable=False)
     experience = db.Column(db.Integer, nullable=True)

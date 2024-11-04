@@ -19,6 +19,7 @@ from send_mail import init_mail
 from flask_mail import Message
 from flask_sse import sse
 from functools import wraps
+import os
 
 from cache import Cache
 
@@ -243,61 +244,127 @@ def cust_reg():
 #         address = data.address
 #         pincode = data.pincode
 
+# old one 
+# @app.route("/provider/register", methods=['POST'])
+# def provider_reg():
+#     if request.method != "POST":
+#         return jsonify({"error": "Invalid request method"}), 405
+
+#     data = request.get_json()
+#     emailid = data.get("emailid")
+#     password = data.get("password")
+#     fullname = data.get("fullname")
+#     phone = data.get("phone")
+#     address = data.get("address")
+#     pincode = data.get("pincode")
+#     services = data.get("services")
+#     experience = data.get("experience")
+#     file = data.get("file")
+
+#     # Validate required fields
+#     if not password or password.strip() == "":
+#         return jsonify({"error": "Password cannot be empty"}), 400
+#     if not fullname or fullname.strip() == "":
+#         return jsonify({"error": "Full name cannot be empty"}), 400
+#     if not phone:
+#         return jsonify({"error": "Phone number cannot be empty"}), 400
+#     if not services:
+#         return jsonify({"error": "Services cannot be empty"}), 400
+#     if not experience:
+#         return jsonify({"error": "Experience cannot be empty"}), 400
+
+#     # Check if email or phone already exists
+#     print('emailid', emailid)
+#     if Provider.query.filter_by(emailid=emailid).first():
+#         return jsonify({"error": "Provider email already exists"}), 400
+#     if Provider.query.filter_by(phone=phone).first():
+#         return jsonify({"error": "Phone number already exists"}), 400
+
+#     # Hash the password
+#     hashed_password = generate_password_hash(password)
+
+#     # Create a new provider
+#     new_provider = Provider(
+#         emailid=emailid,
+#         password=hashed_password,
+#         fullname=fullname,
+#         phone=phone,
+#         address=address,
+#         pincode=pincode,
+#         services=services,
+#         experience=experience,
+#         file = file
+#     )
+
+#     db.session.add(new_provider)
+#     db.session.commit()
+
+#     return jsonify({"msg": "Provider registration successful", "emailid": emailid}), 201
 
 @app.route("/provider/register", methods=['POST'])
 def provider_reg():
-    if request.method != "POST":
-        return jsonify({"error": "Invalid request method"}), 405
+  if request.method != "POST":
+      return jsonify({"error": "Invalid request method"}), 405
 
-    data = request.get_json()
-    emailid = data.get("emailid")
-    password = data.get("password")
-    fullname = data.get("fullname")
-    phone = data.get("phone")
-    address = data.get("address")
-    pincode = data.get("pincode")
-    services = data.get("services")
-    experience = data.get("experience")
+  # Get form data
+  emailid = request.form.get("emailid")
+  password = request.form.get("password")
+  fullname = request.form.get("fullname")
+  phone = request.form.get("phone")
+  address = request.form.get("address")
+  pincode = request.form.get("pincode")
+  services = request.form.get("services")
+  experience = request.form.get("experience")
+  file = request.files.get("file")
 
-    # Validate required fields
-    if not password or password.strip() == "":
-        return jsonify({"error": "Password cannot be empty"}), 400
-    if not fullname or fullname.strip() == "":
-        return jsonify({"error": "Full name cannot be empty"}), 400
-    if not phone:
-        return jsonify({"error": "Phone number cannot be empty"}), 400
-    if not services:
-        return jsonify({"error": "Services cannot be empty"}), 400
-    if not experience:
-        return jsonify({"error": "Experience cannot be empty"}), 400
+  # Validate required fields
+  if not password or password.strip() == "":
+      return jsonify({"error": "Password cannot be empty"}), 400
+  if not fullname or fullname.strip() == "":
+      return jsonify({"error": "Full name cannot be empty"}), 400
+  if not phone:
+      return jsonify({"error": "Phone number cannot be empty"}), 400
+  if not services:
+      return jsonify({"error": "Services cannot be empty"}), 400
+  if not experience:
+      return jsonify({"error": "Experience cannot be empty"}), 400
 
-    # Check if email or phone already exists
-    print('emailid', emailid)
-    if Provider.query.filter_by(emailid=emailid).first():
-        return jsonify({"error": "Provider email already exists"}), 400
-    if Provider.query.filter_by(phone=phone).first():
-        return jsonify({"error": "Phone number already exists"}), 400
+  # Check if email or phone already exists
+  if Provider.query.filter_by(emailid=emailid).first():
+      return jsonify({"error": "Provider email already exists"}), 400
+  if Provider.query.filter_by(phone=phone).first():
+      return jsonify({"error": "Phone number already exists"}), 400
 
-    # Hash the password
-    hashed_password = generate_password_hash(password)
+  # Hash the password
+  hashed_password = generate_password_hash(password)
 
-    # Create a new provider
-    new_provider = Provider(
-        emailid=emailid,
-        password=hashed_password,
-        fullname=fullname,
-        phone=phone,
-        address=address,
-        pincode=pincode,
-        services=services,
-        experience=experience
-    )
+  # Save the file if it exists
+  if file:
+      print('test')
+    #   filename = secure_filename(file.filename)
+      filename = fullname.replace(' ', '_') + '.pdf'
+      file_path = os.path.join('static', filename)
+      file.save(file_path)
+  else:
+      return jsonify({"error": "File is required"}), 400
 
-    db.session.add(new_provider)
-    db.session.commit()
+  # Create a new provider
+  new_provider = Provider(
+      emailid=emailid,
+      password=hashed_password,
+      fullname=fullname,
+      phone=phone,
+      address=address,
+      pincode=pincode,
+      services=services,
+      experience=experience,
+      file=file_path  # Store the file path in the database
+  )
 
-    return jsonify({"msg": "Provider registration successful", "emailid": emailid}), 201
+  db.session.add(new_provider)
+  db.session.commit()
 
+  return jsonify({"msg": "Provider registration successful", "emailid": emailid}), 201
 
 def method_name():
     pass

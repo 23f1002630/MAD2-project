@@ -35,9 +35,9 @@
           <!-- <div class="col">
             <input type="password" class="form-control" placeholder="Confirm password" />
           </div> -->
-          <!-- <div class="col">
-            <input type="file" class="form-control" placeholder="Attach document" />
-          </div> -->
+          <div class="col">
+            <input type="file" class="form-control" placeholder="Attach document" accept="application/pdf" @change="handleFileUpload" />
+          </div>
         </div>
         <div class="row mb-3">
           <div class="col">
@@ -66,41 +66,93 @@
 <script>
 import axios from 'axios';
 
+// export default {
+//   name: 'ProviderReg',
+//   data() {
+//     return {
+//       emailid: "",
+//       fullname:"",
+//       password: "",
+//       address: "",
+//       pincode: "",
+//       phone:"",
+//       experience:"",
+//       services:""
+//     };
+//   },
+//   methods: {
+//     async register() {
+//       try {
+//         const response = await axios.post('http://127.0.0.1:5000/provider/register', 
+//         {
+//           "emailid": this.emailid,   // Make sure the field names match the backend expectation
+//           "fullname":this.fullname,
+//           "password": this.password,
+//           "address": this.address,
+//           "pincode": this.pincode,
+//           "phone":this.phone,
+//           "experience":this.experience,
+//           "services":this.services,
+//           "file": this.file
+//         },
+//         {
+//           headers: {
+//             'Content-Type': 'application/json'  // Ensure JSON data is correctly recognized
+//           }
+//         });
+
+//         console.log(this.emailid, this.password,this.fullname,this.phone, this.address, this.pincode,this.experience,this.services,this.file);
+
+//         if (response.status === 201) {
+//           this.$router.push('/');
+//         } else {
+//           alert(response.data.error);
+//         }
+//       } catch (error) {
+//         alert('An error occurred: ' + error.message);
+//       }
+//     }
+//   }
+// };
+
 export default {
-  name: 'ProviderReg',
   data() {
     return {
-      emailid: "",
-      fullname:"",
-      password: "",
-      address: "",
-      pincode: "",
-      phone:"",
-      experience:"",
-      services:""
+      emailid: '',
+      fullname: '',
+      password: '',
+      address: '',
+      pincode: '',
+      phone: '',
+      experience: '',
+      services: '',
+      file: null, // Add a data property for the file
     };
   },
   methods: {
+    handleFileUpload(event) {
+      this.file = event.target.files[0]; // Get the file from the input
+    },
     async register() {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/provider/register', 
-        {
-          "emailid": this.emailid,   // Make sure the field names match the backend expectation
-          "fullname":this.fullname,
-          "password": this.password,
-          "address": this.address,
-          "pincode": this.pincode,
-          "phone":this.phone,
-          "experience":this.experience,
-          "services":this.services
-        },
-        {
+        const formData = new FormData();
+        formData.append('emailid', this.emailid);
+        formData.append('fullname', this.fullname);
+        formData.append('password', this.password);
+        formData.append('address', this.address);
+        formData.append('pincode', this.pincode);
+        formData.append('phone', this.phone);
+        formData.append('experience', this.experience);
+        formData.append('services', this.services);
+        formData.append('file', this.file); // Append the file
+
+        const response = await axios.post('http://127.0.0.1:5000/provider/register', formData, {
           headers: {
-            'Content-Type': 'application/json'  // Ensure JSON data is correctly recognized
-          }
+            'Content-Type': 'multipart/form-data', // Set the content type to multipart/form-data
+          },
         });
 
-        console.log(this.emailid, this.password,this.fullname,this.phone, this.address, this.pincode,this.experience,this.services);
+        console.log(this.emailid, this.password, this.fullname, this.phone, this.address, this.pincode, this.experience, this.services, this.file);
 
         if (response.status === 201) {
           this.$router.push('/');
@@ -110,8 +162,8 @@ export default {
       } catch (error) {
         alert('An error occurred: ' + error.message);
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
