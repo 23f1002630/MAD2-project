@@ -150,9 +150,10 @@ def login():
     if role == "admin":
         user = User.query.filter_by(email=email).first()
     elif role == "customer":
-        user = Customer.query.filter_by(emailid=email, isblocked=False).first()
+        user = Customer.query.filter_by(emailid=email, isblocked=0).first()
     elif role == "provider":
-        user = Provider.query.filter_by(emailid=email, isblocked=False).first()
+        user = Provider.query.filter_by(
+            emailid=email, isblocked=0, status="Approved").first()
     else:
         return jsonify(error="Invalid role"), 400
 
