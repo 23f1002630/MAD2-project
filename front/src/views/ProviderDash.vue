@@ -11,8 +11,8 @@
                     <Column field="location" header="Location"></Column>
                     <Column header="Action">
                         <template #body>
-                            <Button label="Accept" class="p-button-success p-mr-2" />
-                            <Button label="Reject" class="p-button-danger" />
+                            <button class="btn btn-primary btn-sm me-2">Approve</button>
+                            <button class="btn btn-primary btn-sm me-2">Reject</button>
                         </template>
                     </Column>
                 </DataTable>
