@@ -4,6 +4,7 @@ import ProviderReg from '../views/ProviderReg.vue';
 import CustomerReg from '../views/CustomerReg.vue';
 import AdminDash from '../views/AdminDash.vue';
 import ProviderDash from '../views/ProviderDash.vue';
+import CustomerDash from '../views/CustomerDash.vue';
 
 
 const router = createRouter({
@@ -33,6 +34,11 @@ const router = createRouter({
             path: '/providerdash',
             name: 'ProviderDash',
             component: ProviderDash
+        },
+        {
+            path: '/customerdash',
+            name: 'CustomerDash',
+            component: CustomerDash
         }
 
     ]

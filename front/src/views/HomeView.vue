@@ -100,7 +100,7 @@ export default {
           if (this.role === 'admin') {
             this.$router.push('/admindash');
           } else if (this.role === 'customer') {
-            this.$router.push('/cust_dashboard');
+            this.$router.push('/customerdash');
           }
           else if (this.role === 'provider') {
             this.$router.push('/providerdash');
