@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, url_for
 from flask import jsonify
 from flask import request
 from database import db
@@ -150,9 +150,9 @@ def login():
     if role == "admin":
         user = User.query.filter_by(email=email).first()
     elif role == "customer":
-        user = Customer.query.filter_by(emailid=email,isblocked=False).first()
+        user = Customer.query.filter_by(emailid=email, isblocked=False).first()
     elif role == "provider":
-        user = Provider.query.filter_by(emailid=email,isblocked=False).first()
+        user = Provider.query.filter_by(emailid=email, isblocked=False).first()
     else:
         return jsonify(error="Invalid role"), 400
 
@@ -393,7 +393,9 @@ def get_professionals():
                 "name": professional.fullname,
                 "experience": professional.experience,
                 "service_name": professional.services,
-                "status": professional.status
+                "status": professional.status,
+                "file": professional.file,
+                "image": professional.image
             }
             for professional in professionals
         ]
@@ -511,7 +513,7 @@ def reject_professional(id):
         return jsonify({"message": "Professional rejected successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 # @app.route('/viewpdf/<filename>')
 # def view_pdf(filename):
 #   try:

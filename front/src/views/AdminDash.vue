@@ -60,7 +60,11 @@
                 <button class="btn btn-primary btn-sm me-2"
                   @click="approveProfessional(professional.id)">Approve</button>
                 <button class="btn btn-primary btn-sm me-2" @click="rejectProfessional(professional.id)">Reject</button>
-                <button class="btn btn-danger btn-sm" @click="viewProfessional(professional.id)">View file</button>
+                <!-- <button class="btn btn-danger btn-sm" @click="viewProfessional(professional.id)">View file</button> -->
+                <a class="btn btn-danger btn-sm" :href="'http://localhost:5000/' + professional.file"
+                  target="_blank">View File</a>
+                <!--  to view the image -->
+                <!-- <img :src="'http://localhost:5000/' + professional.image" height="100px" width="100px">  -->
               </td>
             </tr>
           </tbody>
