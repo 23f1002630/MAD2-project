@@ -57,14 +57,21 @@
               <td>{{ professional.experience }}</td>
               <td>{{ professional.service_name }}</td>
               <td class="text-center">
-                <button class="btn btn-primary btn-sm me-2"
-                  @click="approveProfessional(professional.id)">Approve</button>
-                <button class="btn btn-primary btn-sm me-2" @click="rejectProfessional(professional.id)">Reject</button>
-                <!-- <button class="btn btn-danger btn-sm" @click="viewProfessional(professional.id)">View file</button> -->
-                <a class="btn btn-danger btn-sm" :href="'http://localhost:5000/' + professional.file"
-                  target="_blank">View File</a>
-                <!--  to view the image -->
-                <!-- <img :src="'http://localhost:5000/' + professional.image" height="100px" width="100px">  -->
+                <p>{{ professional.status }}</p>
+                <div v-if="professional.status === 'pending'" >
+                  <button class="btn btn-primary btn-sm me-2"
+                    @click="approveProfessional(professional.id)">Approve</button>
+                  <button class="btn btn-primary btn-sm me-2"
+                    @click="rejectProfessional(professional.id)">Reject</button>
+                  <a class="btn btn-danger btn-sm" :href="'http://localhost:5000/' + professional.file"
+                    target="_blank">View File</a>
+                  <!--  to view the image -->
+                  <!-- <img :src="'http://localhost:5000/' + professional.image" height="100px" width="100px">  -->
+                </div>
+                <div v-else >
+                  <button class="btn btn-danger btn-sm" @click="blockProfessional(professional.id)">Block</button>
+                  <button class="btn btn-danger btn-sm">Delete</button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -314,6 +321,26 @@ export default {
         });
     },
 
+    blockProfessional(id) {
+
+      let your_jwt_token = localStorage.getItem('jwt');
+      const response = axios.post('http://127.0.0.1:5000/api/professionalblock/' + id,
+        // passing data to server
+        {},
+        // passing header details
+        {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        }).then(response => {
+          this.fetchProfessionals()
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    },
+
 
     updateService(serviceDetails) {
 
@@ -353,6 +380,8 @@ export default {
 
     },
 
+
+
     getServiceDetails(id) {
       let your_jwt_token = localStorage.getItem('jwt');
       const response = axios.get('http://127.0.0.1:5000/api/services/' + id, {
@@ -374,6 +403,7 @@ export default {
       this.showEditModal()
       this.getServiceDetails(id)
     },
+
     async deleteService(id) {
       try {
         let your_jwt_token = localStorage.getItem('jwt');
@@ -389,13 +419,13 @@ export default {
         console.error("Error deleting service:", error);
       }
     },
-    async logout() {
-      localStorage.removeItem('jwt');
-      localStorage.removeItem('role');
-      if (this.$route.path != '/') {
-        this.$router.push('/')
-      }
-    }
+    // async logout() {
+    //   localStorage.removeItem('jwt');
+    //   localStorage.removeItem('role');
+    //   if (this.$route.path != '/') {
+    //     this.$router.push('/')
+    //   }
+    // }
   },
 };
 </script>

@@ -36,6 +36,15 @@
   <script>
   export default {
     name: 'AdminBar',
+    methods: {
+      async logout() {
+      localStorage.removeItem('jwt');
+      localStorage.removeItem('role');
+      if (this.$route.path != '/') {
+        this.$router.push('/')
+      }
+    }
+  }
   };
   </script>
   
