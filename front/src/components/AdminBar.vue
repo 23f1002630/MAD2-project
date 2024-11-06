@@ -56,6 +56,8 @@
   
   .nav-link {
     color: #0056b3;
+    font-size: 18px;
+    transition: color 0.3s;
   }
   
   .nav-link:hover {

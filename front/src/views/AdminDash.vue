@@ -3,7 +3,7 @@
     <header>
       <AdminBar />
     </header>
-    <div class="card mb-2">
+    <div class="card mb-2 container">
       <div class="card-header">Services</div>
       <div class="card-body">
         <table class="table">
@@ -68,9 +68,11 @@
                   <!--  to view the image -->
                   <!-- <img :src="'http://localhost:5000/' + professional.image" height="100px" width="100px">  -->
                 </div>
-                <div v-else >
+                <div v-else-if="professional.isblocked" >
+                  <button class="btn btn-success btn-sm" @click="blockProfessional(professional.id)">Unblock</button>
+                </div>
+                <div v-else>
                   <button class="btn btn-danger btn-sm" @click="blockProfessional(professional.id)">Block</button>
-                  <button class="btn btn-danger btn-sm">Delete</button>
                 </div>
               </td>
             </tr>
@@ -112,8 +114,8 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h1 class="modal-title fs-5" id="serviceModalLabel">New Service</h1>
-            <button @click="mymodal"></button>
+            <h1 @click="mymodal" class="modal-title fs-5" id="serviceModalLabel">New Service</h1>
+            
           </div>
           <div class="modal-body">
             <form @submit.prevent="addService">

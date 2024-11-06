@@ -396,7 +396,8 @@ def get_professionals():
                 "service_name": professional.services,
                 "status": professional.status,
                 "file": professional.file,
-                "image": professional.image
+                "image": professional.image,
+                "isblocked": professional.isblocked
             }
             for professional in professionals
         ]
@@ -447,7 +448,7 @@ def get_service_details(id):
 def block_professional(id):
     try:
         professional = Provider.query.get(id)
-        professional.isblock = not professional.isblock
+        professional.isblocked = not professional.isblocked
         db.session.commit()
         return jsonify({"message": "Professional blocked successfully"}), 200
     except Exception as e:
@@ -459,7 +460,7 @@ def block_professional(id):
 def block_customer(id):
     try:
         customer = Customer.query.get(id)
-        customer.isblock = not customer.isblock
+        customer.isblocked = not customer.isblocked
         db.session.commit()
         return jsonify({"message": "Customer blocked successfully"}), 200
     except Exception as e:

@@ -1,7 +1,7 @@
 <template>
     <div class="container my-5">
         <CustomerBar />
-        <div class="card p-4">
+        <div class="card p-4 container">
             <h3 class="text-center text-primary mb-4">Our Services</h3>
             <div class="d-flex justify-content-around flex-wrap">
                 <button class="btn btn-outline-primary m-2">Cleaning Services</button>

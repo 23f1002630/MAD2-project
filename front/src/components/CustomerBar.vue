@@ -15,7 +15,7 @@
                         <a class="nav-link" href="#">Profile</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Search</a>
+                        <a class="nav-link" href="/customersearch">Search</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">Stats</a>
