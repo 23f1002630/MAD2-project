@@ -58,7 +58,7 @@
               <td>{{ professional.service_name }}</td>
               <td class="text-center">
                 <p>{{ professional.status }}</p>
-                <div v-if="professional.status === 'pending'" >
+                <div v-if="professional.status === 'pending'">
                   <button class="btn btn-primary btn-sm me-2"
                     @click="approveProfessional(professional.id)">Approve</button>
                   <button class="btn btn-primary btn-sm me-2"
@@ -68,7 +68,7 @@
                   <!--  to view the image -->
                   <!-- <img :src="'http://localhost:5000/' + professional.image" height="100px" width="100px">  -->
                 </div>
-                <div v-else-if="professional.isblocked" >
+                <div v-else-if="professional.isblocked">
                   <button class="btn btn-success btn-sm" @click="blockProfessional(professional.id)">Unblock</button>
                 </div>
                 <div v-else>
@@ -115,7 +115,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h1 @click="mymodal" class="modal-title fs-5" id="serviceModalLabel">New Service</h1>
-            
+
           </div>
           <div class="modal-body">
             <form @submit.prevent="addService">

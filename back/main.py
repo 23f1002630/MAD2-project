@@ -467,28 +467,28 @@ def block_customer(id):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/api/deleteprofessional/<id>', methods=["DELETE"])
-@jwt_required()
-def delete_professional(id):
-    try:
-        professional = Provider.query.get(id)
-        db.session.delete(professional)
-        db.session.commit()
-        return jsonify({"message": "Professional deleted successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# @app.route('/api/deleteprofessional/<id>', methods=["DELETE"])
+# @jwt_required()
+# def delete_professional(id):
+#     try:
+#         professional = Provider.query.get(id)
+#         db.session.delete(professional)
+#         db.session.commit()
+#         return jsonify({"message": "Professional deleted successfully"}), 200
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/api/deletecustomer/<id>', methods=["DELETE"])
-@jwt_required()
-def delete_customer(id):
-    try:
-        customer = Customer.query.get(id)
-        db.session.delete(customer)
-        db.session.commit()
-        return jsonify({"message": "Customer deleted successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# @app.route('/api/deletecustomer/<id>', methods=["DELETE"])
+# @jwt_required()
+# def delete_customer(id):
+#     try:
+#         customer = Customer.query.get(id)
+#         db.session.delete(customer)
+#         db.session.commit()
+#         return jsonify({"message": "Customer deleted successfully"}), 200
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/approveprofessional/<id>', methods=["POST"])
@@ -571,6 +571,27 @@ def add_service():
 
     return jsonify({'id': new_service.id, 'service': new_service.services, 'description': new_service.description, 'price': new_service.price}), 201
 
+
+@app.route('/api/getprovidersbyservice/<string:service_name>', methods=['GET'])
+@jwt_required()
+def get_providers_by_service(service_name):
+  professionals = Provider.query.filter_by(services=service_name).all()
+  if not professionals:
+      return jsonify({'error': 'Service not found'}), 404
+
+  # Create a list of dictionaries for each professional
+  providers_list = [
+      {
+          'id': professional.id,
+          'name': professional.fullname,
+          'experience': professional.experience,
+          'service': professional.services,
+          'phone': professional.phone
+      }
+      for professional in professionals
+  ]
+
+  return jsonify(providers_list), 200
 
 @app.route("/protected", methods=["GET"])
 @jwt_required()
