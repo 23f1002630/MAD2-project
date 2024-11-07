@@ -365,7 +365,7 @@ def provider_reg():
         phone=phone,
         address=address,
         pincode=pincode,
-        services=services,
+        service_id=services,
         experience=experience,
         file=file_path,
         image=image_path
@@ -393,7 +393,7 @@ def get_professionals():
                 "id": professional.id,
                 "name": professional.fullname,
                 "experience": professional.experience,
-                "service_name": professional.services,
+                "service_name": Services.query.get(professional.service_id).services,
                 "status": professional.status,
                 "file": professional.file,
                 "image": professional.image,
@@ -555,6 +555,7 @@ def delete_service(service_id):
 
 
 @app.route('/api/services', methods=['POST'])
+@jwt_required()
 def add_service():
     data = request.json
     service_name = data.get('service')
@@ -572,26 +573,28 @@ def add_service():
     return jsonify({'id': new_service.id, 'service': new_service.services, 'description': new_service.description, 'price': new_service.price}), 201
 
 
-@app.route('/api/getprovidersbyservice/<string:service_name>', methods=['GET'])
+@app.route('/api/getprovidersbyservice/<int:service_id>', methods=['GET'])
 @jwt_required()
-def get_providers_by_service(service_name):
-  professionals = Provider.query.filter_by(services=service_name).all()
-  if not professionals:
-      return jsonify({'error': 'Service not found'}), 404
+def get_providers_by_service(service_id):
+    selected_service = Services.query.get(service_id)
+    professionals = Provider.query.filter_by(service_id=service_id).all()
+    if not professionals:
+        return jsonify({'error': 'Service not found'}), 404
 
-  # Create a list of dictionaries for each professional
-  providers_list = [
-      {
-          'id': professional.id,
-          'name': professional.fullname,
-          'experience': professional.experience,
-          'service': professional.services,
-          'phone': professional.phone
-      }
-      for professional in professionals
-  ]
+    # Create a list of dictionaries for each professional
+    providers_list = [
+        {
+            'id': professional.id,
+            'name': professional.fullname,
+            'experience': professional.experience,
+            'service': selected_service.services,
+            'phone': professional.phone
+        }
+        for professional in professionals
+    ]
 
-  return jsonify(providers_list), 200
+    return jsonify(providers_list), 200
+
 
 @app.route("/protected", methods=["GET"])
 @jwt_required()

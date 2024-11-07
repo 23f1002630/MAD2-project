@@ -8,9 +8,10 @@
             <input type="email" class="form-control" placeholder="Email" v-model="emailid" />
           </div>
           <div class="col">
-            <select class="form-control" v-model="services">
-              <option value="" disabled selected>Select service</option>
-              <option value="cleaningservices">Cleaning Services</option>
+            <select class="form-control" v-model="selectedservice">
+              <option v-for="service in services" :key="service.id" :value="service.id">{{ service.services }}</option>
+              <!-- <option value="" disabled selected>Select service</option> -->
+              <!-- <option value="cleaningservices">Cleaning Services</option>
               <option value="maintenanceandrepair">Maintenance and Repair</option>
               <option value="landscapingandgardening">Landscaping and Gardening</option>
               <option value="pestcontrol">Pest Control</option>
@@ -19,7 +20,7 @@
               <option value="movingandstorage">Moving and Storage</option>
               <option value="specialtyservices">Specialty Services</option>
               <option value="organizinganddecluttering">Organizing and Decluttering</option>
-              <option value="petservices">Pet Services</option>
+              <option value="petservices">Pet Services</option> -->
             </select>
           </div>
         </div>
@@ -122,6 +123,7 @@ import axios from 'axios';
 export default {
   data() {
     return {
+      services: [],
       emailid: '',
       fullname: '',
       password: '',
@@ -130,9 +132,13 @@ export default {
       phone: '',
       experience: '',
       services: '',
+      selectedservice: null,
       file: null,
       image: null // Add a data property for the file
     };
+  },
+  mounted() {
+    this.fetchServices();
   },
   methods: {
     handleFileUpload(event) {
@@ -153,7 +159,7 @@ export default {
         formData.append('pincode', this.pincode);
         formData.append('phone', this.phone);
         formData.append('experience', this.experience);
-        formData.append('services', this.services);
+        formData.append('services', this.selectedservice);
         formData.append('file', this.file); // Append the file
         formData.append('image', this.image);
         console.log('Hisham');
@@ -175,6 +181,21 @@ export default {
         alert('An error occurred: ' + error.message);
       }
     },
+    async fetchServices() {
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.get('http://127.0.0.1:5000/api/services', {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        });
+        this.services = response.data;
+        console.log(this.services);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      }
+    }
   },
 };
 </script>

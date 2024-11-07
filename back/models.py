@@ -14,7 +14,7 @@ class Provider(db.Model):
     password = db.Column(db.String, unique=False, nullable=False)
     phone = db.Column(db.Integer, unique=True)
     fullname = db.Column(db.String, nullable=False)
-    services = db.Column(db.String, nullable=False)
+    service_id = db.Column(db.Integer, nullable=False)
     file = db.Column(db.String)
     image = db.Column(db.String)
     address = db.Column(db.String, nullable=False)

@@ -4,7 +4,7 @@
         <div v-if="selectedprofessional.length === 0" class="card p-4 container">
             <h3 class="text-center text-primary mb-4">Our Services</h3>
             <div class="d-flex justify-content-around flex-wrap">
-                <button v-for="service in services" :key="service.id" @click="selectService(service.services)" class="btn btn-outline-primary m-2">{{ service.services }}</button>
+                <button v-for="service in services" :key="service.id" @click="selectService(service.id)" class="btn btn-outline-primary m-2">{{ service.services }}</button>
             </div>
         </div>
 
@@ -77,7 +77,7 @@ export default {
     },
 
     methods: {
-        async selectService(service) {
+        async selectService(id) {
             // @app.route('/api/getprovidersbyservice/<string:service_name>', methods=['GET'])
             // @jwt_required()
             // def get_providers_by_service(service_name):
@@ -100,7 +100,7 @@ export default {
             //   return jsonify(providers_list), 200
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
-                const response = await axios.get('http://127.0.0.1:5000/api/getprovidersbyservice/' + service, {
+                const response = await axios.get('http://127.0.0.1:5000/api/getprovidersbyservice/' + id, {
                     headers: {
                         Authorization: `Bearer ${your_jwt_token}`
                     },
