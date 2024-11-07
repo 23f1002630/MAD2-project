@@ -15,6 +15,7 @@
                 <p>{{ professional.experience }}</p>
                 <p>{{ professional.service }}</p>
                 <p>{{ professional.phone }}</p>
+                <button @click="requestProfessional(professional.id)" class="btn btn-primary">Request</button>
             </div>
         </div>
         <div class="card mt-4 p-4">
