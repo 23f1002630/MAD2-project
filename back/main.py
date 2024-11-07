@@ -21,7 +21,7 @@ from flask_sse import sse
 from functools import wraps
 import os
 
-from cache import Cache
+from flask_caching import Cache
 
 
 app = Flask(__name__)
@@ -34,11 +34,13 @@ app.config["JWT_SECRET_KEY"] = "5#y2LF4Q8z\n\xec]/"  # Change this!
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 app.config['JWT_COOKIE_CSRF_PROTECT'] = False
 app.config['JWT_TOKEN_LOCATION'] = ['headers']  # CHANGE NEW
+
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/1'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/2'
 app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True
 app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'
-
+app.config['CACHE_TYPE'] = 'RedisCache'
+app.config['CACHE_REDIS_URL'] = "redis://localhost:6379/0"
 cache = Cache(app)
 
 # CORS(app, supports_credentials=True)
@@ -407,6 +409,7 @@ def get_professionals():
 
 
 @app.route("/api/services", methods=["GET"])
+@cache.memoize(timeout=50)
 @jwt_required()
 def get_services():
     try:
@@ -531,6 +534,7 @@ def update_service(id):
         service.price = data.get('price')
         # saving new data to db
         db.session.commit()
+        cache.delete_memoized(get_services)
         service_data = {
             "id": service.id,
             "services": service.services,
@@ -551,6 +555,7 @@ def delete_service(service_id):
 
     db.session.delete(service)
     db.session.commit()
+    cache.delete_memoized(get_services)
     return jsonify({'message': 'Service deleted successfully'}), 200
 
 
@@ -569,6 +574,8 @@ def add_service():
                            description=description, price=price)
     db.session.add(new_service)
     db.session.commit()
+
+    cache.delete_memoized(get_services)
 
     return jsonify({'id': new_service.id, 'service': new_service.services, 'description': new_service.description, 'price': new_service.price}), 201
 
