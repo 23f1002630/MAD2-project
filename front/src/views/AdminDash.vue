@@ -154,19 +154,7 @@
             <form @submit.prevent="updateService(serviceseditDetails)">
               <div class="mb-3">
                 <label for="service-name" class="col-form-label">Service:</label>
-                <select class="form-control" id="service-name" v-model="serviceseditDetails.services">
-                  <option value="" disabled selected>Select service</option>
-                  <option value="cleaningservices">Cleaning Services</option>
-                  <option value="maintenanceandrepair">Maintenance and Repair</option>
-                  <option value="landscapingandgardening">Landscaping and Gardening</option>
-                  <option value="pestcontrol">Pest Control</option>
-                  <option value="homeimprovementandrenovation">Home Improvement and Renovation</option>
-                  <option value="securityandsafety">Security and Safety</option>
-                  <option value="movingandstorage">Moving and Storage</option>
-                  <option value="specialtyservices">Specialty Services</option>
-                  <option value="organizinganddecluttering">Organizing and Decluttering</option>
-                  <option value="petservices">Pet Services</option>
-                </select>
+                <input type="text" class="form-control" id="service-name" v-model="serviceseditDetails.services">
               </div>
               <div class="mb-3">
                 <label for="description-text" class="col-form-label">Description:</label>
