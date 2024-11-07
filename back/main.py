@@ -577,7 +577,7 @@ def add_service():
 @jwt_required()
 def get_providers_by_service(service_id):
     selected_service = Services.query.get(service_id)
-    professionals = Provider.query.filter_by(service_id=service_id).all()
+    professionals = Provider.query.filter_by(service_id=service_id, isblocked=False, status="Approved").all()
     if not professionals:
         return jsonify({'error': 'Service not found'}), 404
 
