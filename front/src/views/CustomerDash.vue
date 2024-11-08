@@ -4,7 +4,8 @@
         <div v-if="selectedprofessional.length === 0" class="card p-4 container">
             <h3 class="text-center text-primary mb-4">Our Services</h3>
             <div class="d-flex justify-content-around flex-wrap">
-                <button v-for="service in services" :key="service.id" @click="selectService(service.id)" class="btn btn-outline-primary m-2">{{ service.services }}</button>
+                <button v-for="service in services" :key="service.id" @click="selectService(service.id)"
+                    class="btn btn-outline-primary m-2">{{ service.services }}</button>
             </div>
         </div>
 
@@ -15,7 +16,7 @@
                 <p>{{ professional.experience }}</p>
                 <p>{{ professional.service }}</p>
                 <p>{{ professional.phone }}</p>
-                <button @click="requestProfessional(professional.id)" class="btn btn-primary">Request</button>
+                <button @click="requestProfessional(professional)" class="btn btn-primary">Request</button>
             </div>
         </div>
         <div class="card mt-4 p-4">
@@ -55,12 +56,51 @@
                 </tbody>
             </table>
         </div>
+        <!-- Modal -->
+        <div v-show="requestModal" class="modal fade" id="requestModal" tabindex="-1"
+            aria-labelledby="requestModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="requestModalLabel">Book Service</h1>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="sendRequest">
+                            <div class="mb-3">
+                                <label for="service-name" class="col-form-label">Service:</label>
+                                <p>{{ selectedService.services }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label for="professional-name" class="col-form-label">Professional:</label>
+                                <p>{{ selectedProfessional.name }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="col-form-label">Phone:</label>
+                                <p>{{ selectedProfessional.phone }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label for="time" class="col-form-label">Time:</label>
+                                <input type="datetime-local" class="form-control" id="time"
+                                    v-model="bookingDetails.time" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button @click="closeModal" type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button @click="sendRequest" type="submit" class="btn btn-primary">Book</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
+import bootstrap from 'bootstrap/dist/js/bootstrap.bundle.js';
 import CustomerBar from '../components/CustomerBar.vue';
 import axios from 'axios';
+
 export default {
     name: 'CustomerDash',
     components: {
@@ -69,7 +109,13 @@ export default {
     data() {
         return {
             selectedprofessional: [],
-            services: []
+            services: [],
+            selectedService: {},
+            selectedProfessional: {},
+            bookingDetails: {
+                time: ''
+            },
+            requestModal: null,
         }
     },
 
@@ -79,26 +125,6 @@ export default {
 
     methods: {
         async selectService(id) {
-            // @app.route('/api/getprovidersbyservice/<string:service_name>', methods=['GET'])
-            // @jwt_required()
-            // def get_providers_by_service(service_name):
-            //   professionals = Provider.query.filter_by(services=service_name).all()
-            //   if not professionals:
-            //       return jsonify({'error': 'Service not found'}), 404
-
-            //   # Create a list of dictionaries for each professional
-            //   providers_list = [
-            //       {
-            //           'id': professional.id,
-            //           'name': professional.fullname,
-            //           'experience': professional.experience,
-            //           'service': professional.services,
-            //           'phone': professional.phone
-            //       }
-            //       for professional in professionals
-            //   ]
-
-            //   return jsonify(providers_list), 200
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
                 const response = await axios.get('http://127.0.0.1:5000/api/getprovidersbyservice/' + id, {
@@ -108,10 +134,45 @@ export default {
                     withCredentials: true
                 });
                 this.selectedprofessional = response.data;
+                this.selectedService = this.services.find(service => service.id === id);
                 console.log(this.selectedprofessional);
             } catch (error) {
                 console.error("Error fetching professionals:", error);
             }
+        },
+
+        requestProfessional(professional) {
+            this.selectedProfessional = professional;
+            this.requestModal = new bootstrap.Modal('#requestModal', {
+                keyboard: false
+            });
+            this.requestModal.show();
+        },
+
+        async sendRequest() {
+            try {
+                let your_jwt_token = localStorage.getItem('jwt');
+                const response = await axios.post('http://127.0.0.1:5000/api/bookings', {
+                    provider_id: this.selectedProfessional.id,
+                    customer_id: "1", // Replace with actual customer ID
+                    service_id: this.selectedService.id,
+                    time: this.bookingDetails.time
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${your_jwt_token}`
+                    },
+                    withCredentials: true
+                });
+                console.log("Booking successful:", response.data);
+                this.closeModal();
+            } catch (error) {
+                console.error("Error sending booking request:", error);
+            }
+        },
+
+        closeModal() {
+            this.requestModal.hide();
+            this.bookingDetails.time = '';
         },
 
         async fetchServices() {
@@ -130,34 +191,5 @@ export default {
             }
         }
     }
-
 }
-
-
 </script>
-
-<style>
-body {
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-}
-
-.card {
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.btn {
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-}
-
-.table th,
-.table td {
-    vertical-align: middle;
-}
-
-.badge {
-    padding: 0.5em 1em;
-    border-radius: 5px;
-}
-</style>

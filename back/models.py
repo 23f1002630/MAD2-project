@@ -51,3 +51,12 @@ class Services(db.Model):
     price = db.Column(db.Integer, nullable=False)
     time = db.Column(db.DateTime, default=datetime.utcnow)
     description = db.Column(db.String, nullable=False)
+
+class Booking(db.Model):
+    __tablename__ = 'booking'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    provider_id = db.Column(db.Integer, nullable=False)
+    customer_id = db.Column(db.Integer, nullable=False)
+    service_id = db.Column(db.Integer, nullable=False)
+    time = db.Column(db.String, default=datetime.utcnow)
+    status = db.Column(db.String, default="pending")
