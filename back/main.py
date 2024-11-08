@@ -609,16 +609,16 @@ def create_booking():
     provider_id = data.get('provider_id')
     customer_id = data.get('customer_id')
     service_id = data.get('service_id')
-    time = data.get('time')
+    # time = data.get('time')
 
-    if not provider_id or not customer_id or not service_id or not time:
+    if not provider_id or not customer_id or not service_id:
         return jsonify({'error': 'Missing data'}), 400
 
-    new_booking = Booking(provider_id=provider_id, customer_id=customer_id, service_id=service_id, time=time)
+    new_booking = Booking(provider_id=provider_id, customer_id=customer_id, service_id=service_id)
     db.session.add(new_booking)
     db.session.commit()
 
-    return jsonify({'id': new_booking.id, 'provider_id': new_booking.provider_id, 'customer_id': new_booking.customer_id, 'service_id': new_booking.service_id, 'time': new_booking.time}), 201
+    return jsonify({'id': new_booking.id, 'provider_id': new_booking.provider_id, 'customer_id': new_booking.customer_id, 'service_id': new_booking.service_id}), 201
 
 
 @app.route("/protected", methods=["GET"])

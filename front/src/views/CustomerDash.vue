@@ -78,11 +78,11 @@
                                 <label for="phone" class="col-form-label">Phone:</label>
                                 <p>{{ selectedProfessional.phone }}</p>
                             </div>
-                            <div class="mb-3">
+                            <!-- <div class="mb-3">
                                 <label for="time" class="col-form-label">Time:</label>
                                 <input type="datetime-local" class="form-control" id="time"
                                     v-model="bookingDetails.time" required>
-                            </div>
+                            </div> -->
                         </form>
                     </div>
                     <div class="modal-footer">

@@ -179,6 +179,7 @@
 </template>
 
 <script>
+
 import bootstrap from 'bootstrap/dist/js/bootstrap.bundle.js';
 import axios from 'axios';
 import AdminBar from '../components/AdminBar.vue';
