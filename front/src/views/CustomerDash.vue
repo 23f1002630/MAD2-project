@@ -1,5 +1,5 @@
 <template>
-    <div class="container my-5">
+    <div v-if="isCustomer" class="container my-5">
         <CustomerBar />
         <div v-if="selectedprofessional.length === 0" class="card p-4 container">
             <h3 class="text-center text-primary mb-4">Our Services</h3>
@@ -94,6 +94,9 @@
             </div>
         </div>
     </div>
+    <div v-else>
+        <p>Unauthorized access. Redirecting...</p>
+    </div>
 </template>
 
 <script>
@@ -108,6 +111,7 @@ export default {
     },
     data() {
         return {
+            isCustomer: false,
             selectedprofessional: [],
             services: [],
             selectedService: {},
@@ -119,11 +123,28 @@ export default {
         }
     },
 
+    created() {
+        this.checkCustomerStatus();
+    },
+
     mounted() {
-        this.fetchServices();
+        if (this.isCustomer) {
+            this.fetchServices();
+        }
     },
 
     methods: {
+        checkCustomerStatus() {
+            const role = localStorage.getItem('role');
+            const token = localStorage.getItem('jwt');
+
+            if (!token || role !== 'customer') {
+                this.$router.push('/');
+                return;
+            }
+
+            this.isCustomer = true;
+        },
         async selectService(id) {
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
@@ -133,15 +154,25 @@ export default {
                     },
                     withCredentials: true
                 });
-                this.selectedprofessional = response.data;
-                this.selectedService = this.services.find(service => service.id === id);
+                if (response.data) {
+                    this.selectedprofessional = response.data;
+                    this.selectedService = this.services.find(service => service.id === id);
+                }
+
                 console.log(this.selectedprofessional);
             } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
                 console.error("Error fetching professionals:", error);
             }
         },
 
         requestProfessional(professional) {
+            if (!this.isCustomer) return;
+
             this.selectedProfessional = professional;
             this.requestModal = new bootstrap.Modal('#requestModal', {
                 keyboard: false
@@ -150,8 +181,10 @@ export default {
         },
 
         async sendRequest() {
+            if (!this.isCustomer) return;
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
+                // const customerId = localStorage.getItem('userId'); // Assuming you store user ID in localStorage
                 const response = await axios.post('http://127.0.0.1:5000/api/bookings', {
                     provider_id: this.selectedProfessional.id,
                     customer_id: "1", // Replace with actual customer ID
@@ -163,19 +196,33 @@ export default {
                     },
                     withCredentials: true
                 });
-                console.log("Booking successful:", response.data);
-                this.closeModal();
+
+                if (response.data) {
+                    console.log("Booking successful:", response.data);
+                    this.closeModal();
+                }
+
             } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
                 console.error("Error sending booking request:", error);
             }
         },
 
         closeModal() {
-            this.requestModal.hide();
-            this.bookingDetails.time = '';
+            if (this.requestModal) {
+                this.requestModal.hide();
+                this.bookingDetails.time = '';
+            }
+
         },
 
         async fetchServices() {
+            if (!this.isCustomer) return;
+
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
                 const response = await axios.get('http://127.0.0.1:5000/api/services', {
@@ -184,9 +231,15 @@ export default {
                     },
                     withCredentials: true
                 });
-                this.services = response.data;
-                console.log(this.services);
+                if (response.data) {
+                    this.services = response.data;
+                }
             } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
                 console.error("Error fetching services:", error);
             }
         }

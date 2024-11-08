@@ -1,5 +1,5 @@
 <template>
-  <div class="container mt-4">
+  <div v-if="isAdmin" class="container mt-4">
     <header>
       <AdminBar />
     </header>
@@ -176,6 +176,9 @@
       </div>
     </div>
   </div>
+  <div v-else>
+    <p>Unauthorized access. Redirecting...</p>
+  </div>
 </template>
 
 <script>
@@ -191,6 +194,7 @@ export default {
   },
   data() {
     return {
+      isAdmin: false,
       professionals: [], // Initialize an empty array to store professionals
       services: [],
       serviceseditDetails: {},
@@ -204,12 +208,33 @@ export default {
       }
     };
   },
+
+  created() {
+    this.checkAdminStatus();
+  },
   mounted() {
-    this.fetchProfessionals();
-    this.fetchServices();
+
+    if (this.isAdmin) {
+      this.fetchProfessionals();
+      this.fetchServices();
+    }
+
   },
   methods: {
+    checkAdminStatus() {
+      const role = localStorage.getItem('role');
+      const token = localStorage.getItem('jwt');
+
+      if (!token || role !== 'admin') {
+        // Redirect to login or home page if not admin
+        this.$router.push('/');
+        return;
+      }
+
+      this.isAdmin = true;
+    },
     async fetchProfessionals() {
+      if (!this.isAdmin) return;
       try {
         let your_jwt_token = localStorage.getItem('jwt');
         const response = await axios.get('http://127.0.0.1:5000/api/professionals', {
@@ -222,7 +247,11 @@ export default {
         console.log("Fetched professionals:", response); // Debugging line
         this.professionals = response.data;
       } catch (error) {
+        if (error.response && error.response.status === 401) {
+          this.$router.push('/');
+        }
         console.error("Error fetching professionals:", error);
+
       }
     },
     mymodal() {
@@ -238,6 +267,7 @@ export default {
       this.editServiceModal.show()
     },
     async addService() {
+      if (!this.isAdmin) return;
       try {
         let your_jwt_token = localStorage.getItem('jwt');
         const response = await axios.post('http://127.0.0.1:5000/api/services', this.newService, {
@@ -256,11 +286,15 @@ export default {
 
 
       } catch (error) {
+        if (error.response && error.response.status === 401) {
+          this.$router.push('/');
+        }
         console.error("Error adding service:", error);
       }
     },
 
     async approveProfessional(id) {
+      if (!this.isAdmin) return;
       const your_jwt_token = localStorage.getItem('jwt');
 
       if (!your_jwt_token) {
@@ -278,11 +312,16 @@ export default {
           this.fetchProfessionals();
         })
         .catch(error => {
+          if (error.response && error.response.status === 401) {
+            this.$router.push('/');
+          }
           console.error('Error approving professional:', error);
         });
     },
 
     async rejectProfessional(id) {
+
+      if (!this.isAdmin) return;
 
       let your_jwt_token = localStorage.getItem('jwt');
       const response = await axios.post(`http://127.0.0.1:5000/api/rejectprofessional/${id}`,
@@ -296,11 +335,16 @@ export default {
           this.fetchProfessionals()
         })
         .catch(error => {
+          if (error.response && error.response.status === 401) {
+            this.$router.push('/');
+          }
           console.error(error);
         });
     },
 
     blockProfessional(id) {
+
+      if (!this.isAdmin) return;
 
       let your_jwt_token = localStorage.getItem('jwt');
       const response = axios.post('http://127.0.0.1:5000/api/professionalblock/' + id,
@@ -316,12 +360,17 @@ export default {
           this.fetchProfessionals()
         })
         .catch(error => {
+          if (error.response && error.response.status === 401) {
+            this.$router.push('/');
+          }
           console.error(error);
         });
     },
 
 
     updateService(serviceDetails) {
+
+      if (!this.isAdmin) return;
 
       let your_jwt_token = localStorage.getItem('jwt');
       const response = axios.put('http://127.0.0.1:5000/api/services/' + serviceDetails.id,
@@ -339,10 +388,15 @@ export default {
 
         })
         .catch(error => {
+          if (error.response && error.response.status === 401) {
+            this.$router.push('/');
+          }
           console.error(error);
         });
     },
     fetchServices() {
+
+      if (!this.isAdmin) return;
 
       let your_jwt_token = localStorage.getItem('jwt');
       const response = axios.get('http://127.0.0.1:5000/api/services', {
@@ -354,6 +408,9 @@ export default {
         this.services = response.data;
       })
         .catch(error => {
+          if (error.response && error.response.status === 401) {
+            this.$router.push('/');
+          }
           console.error(error);
         });
 
@@ -362,6 +419,8 @@ export default {
 
 
     getServiceDetails(id) {
+      if (!this.isAdmin) return;
+
       let your_jwt_token = localStorage.getItem('jwt');
       const response = axios.get('http://127.0.0.1:5000/api/services/' + id, {
         headers: {
@@ -372,11 +431,13 @@ export default {
         this.serviceseditDetails = response.data;
       })
         .catch(error => {
+          if (error.response && error.response.status === 401) {
+            this.$router.push('/');
+          }
           console.error(error);
         });
+
     },
-
-
 
     startEditing(id) {
       this.showEditModal()
@@ -384,6 +445,8 @@ export default {
     },
 
     async deleteService(id) {
+      if (!this.isAdmin) return;
+
       try {
         let your_jwt_token = localStorage.getItem('jwt');
         const response = await axios.delete('http://127.0.0.1:5000/api/services/' + id, {
@@ -395,16 +458,13 @@ export default {
         console.log("Service deleted:", response.data);
         this.fetchServices();
       } catch (error) {
+        if (error.response && error.response.status === 401) {
+          this.$router.push('/');
+        }
         console.error("Error deleting service:", error);
       }
-    },
-    // async logout() {
-    //   localStorage.removeItem('jwt');
-    //   localStorage.removeItem('role');
-    //   if (this.$route.path != '/') {
-    //     this.$router.push('/')
-    //   }
-    // }
+    }
+
   },
 };
 </script>

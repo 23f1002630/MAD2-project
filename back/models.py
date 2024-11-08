@@ -35,15 +35,6 @@ class Customer(db.Model):
     pincode = db.Column(db.Integer, nullable=False)
     isblocked = db.Column(db.Integer, default=0)
 
-
-# class Services(db.Model):
-#     __tablename__ = 'services'
-#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-#     services = db.Column(db.String, nullable=False)
-#     price = db.Column(db.Integer, nullable=False)
-#     time = db.Column(db.DateTime)
-#     description = db.Column(db.String, nullable=False)
-
 class Services(db.Model):
     __tablename__ = 'services'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

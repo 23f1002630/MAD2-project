@@ -1,5 +1,5 @@
 <template>
-    <div id="app" class="container my-5">
+    <div v-if="isProvider" id="app" class="container my-5">
         <ProviderBar />
 
         <div class="card p-4 mb-4 container">
@@ -21,8 +21,10 @@
                         <td>{{ service.phone }}</td>
                         <td>{{ service.location }}</td>
                         <td>
-                            <button class="btn btn-primary btn-sm me-2">Approve</button>
-                            <button class="btn btn-primary btn-sm me-2">Reject</button>
+                            <button class="btn btn-primary btn-sm me-2"
+                                @click="approveService(service.id)">Approve</button>
+                            <button class="btn btn-primary btn-sm me-2"
+                                @click="rejectService(service.id)">Reject</button>
                         </td>
                     </tr>
                 </tbody>
@@ -55,9 +57,13 @@
             </table>
         </div>
     </div>
+    <div v-else>
+        <p>Unauthorized access. Redirecting...</p>
+    </div>
 </template>
 
 <script>
+import axios from 'axios';
 import ProviderBar from '../components/ProviderBar.vue';
 
 export default {
@@ -67,13 +73,142 @@ export default {
     },
     data() {
         return {
-            todayServices: [
-                { id: 1, customerName: 'John Doe', phone: '123-456-7890', location: 'New York' }
-            ],
-            closedServices: [
-                { id: 1, customerName: 'Jane Smith', phone: '987-654-3210', location: 'Los Angeles', date: '2023-10-01', rating: 5 }
-            ]
+            isProvider: false,
+            todayServices: [],
+            closedServices: []
         };
+    },
+
+    created() {
+        this.checkProviderStatus();
+    },
+
+    mounted() {
+        if (this.isProvider) {
+            this.fetchTodayServices();
+            this.fetchClosedServices();
+        }
+    },
+
+    methods: {
+        checkProviderStatus() {
+            const role = localStorage.getItem('role');
+            const token = localStorage.getItem('jwt');
+
+            if (!token || role !== 'provider') {
+                this.$router.push('/');
+                return;
+            }
+
+            this.isProvider = true;
+        },
+
+        async fetchTodayServices() {
+            if (!this.isProvider) return;
+
+            try {
+                const token = localStorage.getItem('jwt');
+                const providerId = localStorage.getItem('userId'); // Assuming you store provider ID
+
+                const response = await axios.get(`http://127.0.0.1:5000/api/provider/today-services/${providerId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data) {
+                    this.todayServices = response.data;
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error fetching today's services:", error);
+            }
+        },
+
+        async fetchClosedServices() {
+            if (!this.isProvider) return;
+
+            try {
+                const token = localStorage.getItem('jwt');
+                const providerId = localStorage.getItem('userId');
+
+                const response = await axios.get(`http://127.0.0.1:5000/api/provider/closed-services/${providerId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data) {
+                    this.closedServices = response.data;
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error fetching closed services:", error);
+            }
+        },
+
+        async approveService(serviceId) {
+            if (!this.isProvider) return;
+
+            try {
+                const token = localStorage.getItem('jwt');
+                const response = await axios.post(`http://127.0.0.1:5000/api/provider/approve-service/${serviceId}`, {}, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data) {
+                    // Refresh the services lists
+                    this.fetchTodayServices();
+                    this.fetchClosedServices();
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error approving service:", error);
+            }
+        },
+
+        async rejectService(serviceId) {
+            if (!this.isProvider) return;
+
+            try {
+                const token = localStorage.getItem('jwt');
+                const response = await axios.post(`http://127.0.0.1:5000/api/provider/reject-service/${serviceId}`, {}, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data) {
+                    // Refresh the services lists
+                    this.fetchTodayServices();
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error rejecting service:", error);
+            }
+        }
     }
 };
 </script>
