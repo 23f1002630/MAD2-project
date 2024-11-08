@@ -1,49 +1,69 @@
 <template>
-    <div id="app">
+    <div id="app" class="container my-5">
         <ProviderBar />
-        <div class="container">
-            <section>
-                <h2>Today Services</h2>
-                <DataTable :value="todayServices" class="p-datatable-striped">
-                    <Column field="id" header="ID"></Column>
-                    <Column field="customerName" header="Customer Name"></Column>
-                    <Column field="phone" header="Phone"></Column>
-                    <Column field="location" header="Location"></Column>
-                    <Column header="Action">
-                        <template #body>
+
+        <div class="card p-4 mb-4 container">
+            <h3 class="text-center text-primary mb-4">Today Services</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Location</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="service in todayServices" :key="service.id">
+                        <td>{{ service.id }}</td>
+                        <td>{{ service.customerName }}</td>
+                        <td>{{ service.phone }}</td>
+                        <td>{{ service.location }}</td>
+                        <td>
                             <button class="btn btn-primary btn-sm me-2">Approve</button>
                             <button class="btn btn-primary btn-sm me-2">Reject</button>
-                        </template>
-                    </Column>
-                </DataTable>
-            </section>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-            <section>
-                <h2>Closed Services</h2>
-                <DataTable :value="closedServices" class="p-datatable-striped">
-                    <Column field="id" header="ID"></Column>
-                    <Column field="customerName" header="Customer Name"></Column>
-                    <Column field="phone" header="Phone"></Column>
-                    <Column field="location" header="Location"></Column>
-                    <Column field="date" header="Date"></Column>
-                    <Column field="rating" header="Rating"></Column>
-                </DataTable>
-            </section>
+        <div class="card p-4">
+            <h3 class="text-center text-primary mb-4">Closed Services</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="service in closedServices" :key="service.id">
+                        <td>{{ service.id }}</td>
+                        <td>{{ service.customerName }}</td>
+                        <td>{{ service.phone }}</td>
+                        <td>{{ service.location }}</td>
+                        <td>{{ service.date }}</td>
+                        <td>{{ service.rating }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </template>
 
 <script>
 import ProviderBar from '../components/ProviderBar.vue';
-import { DataTable, Column, Button } from 'primevue';
 
 export default {
     name: 'ProviderDash',
     components: {
-        ProviderBar,
-        DataTable,
-        Column,
-        Button
+        ProviderBar
     },
     data() {
         return {
@@ -63,8 +83,21 @@ export default {
     margin-top: 20px;
 }
 
-h2 {
+.card {
+    margin-bottom: 20px;
+}
+
+h3 {
     margin-top: 20px;
     font-weight: bold;
+}
+
+.table th,
+.table td {
+    vertical-align: middle;
+}
+
+.btn {
+    margin-right: 5px;
 }
 </style>
