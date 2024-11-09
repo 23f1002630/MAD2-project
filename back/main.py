@@ -2,6 +2,7 @@ from flask import Flask, url_for
 from flask import jsonify
 from flask import request
 from database import db
+from sqlalchemy import and_
 from models import *
 from models import user as User
 from datetime import datetime
@@ -43,6 +44,14 @@ app.config['CACHE_TYPE'] = 'RedisCache'
 app.config['CACHE_REDIS_URL'] = "redis://localhost:6379/0"
 cache = Cache(app)
 
+# CORS(app, resources={
+#     r"/api/*": {
+#         "origins": ["http://localhost:5173"],  # Vue.js development server
+#         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#         "allow_headers": ["Content-Type", "Authorization"],
+#         "supports_credentials": True
+#     }
+# })
 # CORS(app, supports_credentials=True)
 CORS(app, origins='http://localhost:5173', supports_credentials=True)
 jwt = JWTManager(app)
@@ -584,7 +593,8 @@ def add_service():
 @jwt_required()
 def get_providers_by_service(service_id):
     selected_service = Services.query.get(service_id)
-    professionals = Provider.query.filter_by(service_id=service_id, isblocked=False, status="Approved").all()
+    professionals = Provider.query.filter_by(
+        service_id=service_id, isblocked=False, status="Approved").all()
     if not professionals:
         return jsonify({'error': 'Service not found'}), 404
 
@@ -602,10 +612,12 @@ def get_providers_by_service(service_id):
 
     return jsonify(providers_list), 200
 
+
 @app.route("/api/bookings", methods=["POST"])
 @jwt_required()
 def create_booking():
     data = request.json
+    current_date = date.today()
     provider_id = data.get('provider_id')
     customer_id = data.get('customer_id')
     service_id = data.get('service_id')
@@ -614,11 +626,88 @@ def create_booking():
     if not provider_id or not customer_id or not service_id:
         return jsonify({'error': 'Missing data'}), 400
 
-    new_booking = Booking(provider_id=provider_id, customer_id=customer_id, service_id=service_id)
+    new_booking = Booking(provider_id=provider_id,
+                          customer_id=customer_id, service_id=service_id,
+                          date=current_date)
     db.session.add(new_booking)
     db.session.commit()
 
     return jsonify({'id': new_booking.id, 'provider_id': new_booking.provider_id, 'customer_id': new_booking.customer_id, 'service_id': new_booking.service_id}), 201
+
+
+@app.route('/api/provider/today-services/<int:provider_id>', methods=['GET'])
+# @jwt_required()
+def get_provider_today_services(provider_id):
+    print('hisham Hi hello')
+    today = date.today()
+    print('today', today)
+    today_bookings = Booking.query.filter_by(
+        date=today, provider_id=provider_id).all()
+    print('today_bookings', today_bookings)
+    response = []
+    for booking in today_bookings:
+        customer = Customer.query.get(booking.customer_id)
+        print('customer', customer, booking.customer_id)
+        response.append({
+            'id': booking.id,
+            'customer_id': booking.customer_id,
+            'service_id': booking.service_id,
+            'customer_name': customer.fullname,
+            'phone': customer.phone,
+            'location': customer.address
+        })
+
+    return jsonify(response), 200
+
+
+@app.route('/api/provider/closed-services/<int:provider_id>', methods=['GET'])
+@jwt_required()
+def get_provider_closed_services(provider_id):
+    try:
+        # Verify the provider is requesting their own services
+        current_user_id = get_jwt_identity()
+        if int(current_user_id) != int(provider_id):
+            return jsonify({
+                'status': 'error',
+                'message': 'Unauthorized access'
+            }), 403
+
+        # Join with Customer table to get customer details
+        closed_bookings = db.session.query(
+            Booking, Customer
+        ).join(
+            Customer, Booking.customer_id == Customer.id
+        ).filter(
+            and_(
+                Booking.provider_id == provider_id,
+                # Show completed and rejected services
+                Booking.status.in_(['completed', 'rejected'])
+            )
+        ).all()
+
+        # Format the response
+        services_list = []
+        for booking, customer in closed_bookings:
+            services_list.append({
+                'id': booking.id,
+                'customerName': f"{customer.fullname}",
+                'phone': customer.phone,
+                'location': customer.location,
+                'date': booking.date.strftime('%Y-%m-%d %H:%M:%S'),
+                'status': booking.status,
+                'rating': booking.rating if hasattr(booking, 'rating') else None
+            })
+
+        return jsonify({
+            'status': 'success',
+            'data': services_list
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 
 @app.route("/protected", methods=["GET"])

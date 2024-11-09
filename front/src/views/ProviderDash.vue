@@ -91,6 +91,59 @@ export default {
     },
 
     methods: {
+        async fetchTodayServices() {
+            if (!this.isProvider) return;
+
+            try {
+                const token = localStorage.getItem('jwt');
+                const providerId = localStorage.getItem('userId');
+
+                const response = await axios.get(`http://127.0.0.1:5000/api/provider/today-services/${providerId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data && response.data.status === 'success') {
+                    this.todayServices = response.data.data;
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error fetching today's services:", error);
+            }
+        },
+
+        async fetchClosedServices() {
+            if (!this.isProvider) return;
+
+            try {
+                const token = localStorage.getItem('jwt');
+                const providerId = localStorage.getItem('userId');
+
+                const response = await axios.get(`http://127.0.0.1:5000/api/provider/closed-services/${providerId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data && response.data.status === 'success') {
+                    this.closedServices = response.data.data;
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error fetching closed services:", error);
+            }
+        },
         checkProviderStatus() {
             const role = localStorage.getItem('role');
             const token = localStorage.getItem('jwt');

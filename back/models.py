@@ -1,5 +1,5 @@
 from database import db
-from datetime import datetime
+from datetime import datetime, date
 
 class user(db.Model):
     __tablename__ = 'user'
@@ -26,8 +26,8 @@ class Provider(db.Model):
 
 class Customer(db.Model):
     __tablename__ = 'customer'
-    # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    emailid = db.Column(db.String, primary_key=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    emailid = db.Column(db.String, nullable=False)
     password = db.Column(db.String, unique=False, nullable=False)
     fullname = db.Column(db.String, nullable=False)
     phone = db.Column(db.Integer, nullable=False, unique=True)
@@ -49,5 +49,6 @@ class Booking(db.Model):
     provider_id = db.Column(db.Integer, nullable=False)
     customer_id = db.Column(db.Integer, nullable=False)
     service_id = db.Column(db.Integer, nullable=False)
-    time = db.Column(db.String, default=datetime.utcnow)
+    date = db.Column(db.Date, default=date.today)
     status = db.Column(db.String, default="pending")
+    rating = db.Column(db.Integer, nullable=True)
