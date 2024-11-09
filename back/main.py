@@ -617,23 +617,41 @@ def get_providers_by_service(service_id):
 @jwt_required()
 def create_booking():
     data = request.json
-    current_date = date.today()
+    # current_date = date.today()
     provider_id = data.get('provider_id')
     customer_id = data.get('customer_id')
     service_id = data.get('service_id')
-    # time = data.get('time')
+    booking_date = data.get('date')
 
-    if not provider_id or not customer_id or not service_id:
-        return jsonify({'error': 'Missing data'}), 400
+    if not all([provider_id, customer_id, service_id, booking_date]):
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    try:
+        # Assuming date comes in format 'YYYY-MM-DD'
+        booking_date = datetime.strptime(booking_date, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+
+    # Validate that booking date is not in the past
+    if booking_date < date.today():
+        return jsonify({'error': 'Cannot book appointments in the past'}), 400
 
     new_booking = Booking(provider_id=provider_id,
                           customer_id=customer_id, service_id=service_id,
-                          date=current_date)
+                          date=booking_date)
     db.session.add(new_booking)
     db.session.commit()
 
-    return jsonify({'id': new_booking.id, 'provider_id': new_booking.provider_id, 'customer_id': new_booking.customer_id, 'service_id': new_booking.service_id}), 201
-
+    return jsonify({
+          'message': 'Booking created successfully',
+          'booking': {
+              'id': new_booking.id,
+              'provider_id': new_booking.provider_id,
+              'customer_id': new_booking.customer_id,
+              'service_id': new_booking.service_id,
+              'date': booking_date.strftime('%Y-%m-%d')
+          }
+      }), 201
 
 @app.route('/api/provider/today-services/<int:provider_id>', methods=['GET'])
 # @jwt_required()

@@ -78,11 +78,11 @@
                                 <label for="phone" class="col-form-label">Phone:</label>
                                 <p>{{ selectedProfessional.phone }}</p>
                             </div>
-                            <!-- <div class="mb-3">
-                                <label for="time" class="col-form-label">Time:</label>
-                                <input type="datetime-local" class="form-control" id="time"
-                                    v-model="bookingDetails.time" required>
-                            </div> -->
+                            <div class="mb-3">
+                                <label for="date" class="col-form-label">Date:</label>
+                                <input type="date" class="form-control" id="date" v-model="bookingDetails.date"
+                                    required>
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -117,7 +117,7 @@ export default {
             selectedService: {},
             selectedProfessional: {},
             bookingDetails: {
-                time: ''
+                date: '', // Added date field
             },
             requestModal: null,
         }
@@ -145,6 +145,7 @@ export default {
 
             this.isCustomer = true;
         },
+
         async selectService(id) {
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
@@ -158,15 +159,8 @@ export default {
                     this.selectedprofessional = response.data;
                     this.selectedService = this.services.find(service => service.id === id);
                 }
-
-                console.log(this.selectedprofessional);
             } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    localStorage.removeItem('jwt');
-                    localStorage.removeItem('role');
-                    this.$router.push('/');
-                }
-                console.error("Error fetching professionals:", error);
+                this.handleError(error);
             }
         },
 
@@ -182,14 +176,22 @@ export default {
 
         async sendRequest() {
             if (!this.isCustomer) return;
+
+            // Validate date
+            if (!this.bookingDetails.date) {
+                alert('Please select a date for the booking');
+                return;
+            }
+
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
-                // const customerId = localStorage.getItem('userId'); // Assuming you store user ID in localStorage
+                const customerId = localStorage.getItem('userId') || "1"; // Get actual customer ID
+
                 const response = await axios.post('http://127.0.0.1:5000/api/bookings', {
                     provider_id: this.selectedProfessional.id,
-                    customer_id: "1", // Replace with actual customer ID
+                    customer_id: customerId,
                     service_id: this.selectedService.id,
-                    time: this.bookingDetails.time
+                    date: this.bookingDetails.date // Send date instead of time
                 }, {
                     headers: {
                         Authorization: `Bearer ${your_jwt_token}`
@@ -198,26 +200,20 @@ export default {
                 });
 
                 if (response.data) {
-                    console.log("Booking successful:", response.data);
+                    alert('Booking successful!');
                     this.closeModal();
                 }
 
             } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    localStorage.removeItem('jwt');
-                    localStorage.removeItem('role');
-                    this.$router.push('/');
-                }
-                console.error("Error sending booking request:", error);
+                this.handleError(error);
             }
         },
 
         closeModal() {
             if (this.requestModal) {
                 this.requestModal.hide();
-                this.bookingDetails.time = '';
+                this.bookingDetails.date = ''; // Reset date instead of time
             }
-
         },
 
         async fetchServices() {
@@ -235,13 +231,32 @@ export default {
                     this.services = response.data;
                 }
             } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    localStorage.removeItem('jwt');
-                    localStorage.removeItem('role');
-                    this.$router.push('/');
-                }
-                console.error("Error fetching services:", error);
+                this.handleError(error);
             }
+        },
+
+        // New method to handle errors
+        handleError(error) {
+            if (error.response && error.response.status === 401) {
+                localStorage.removeItem('jwt');
+                localStorage.removeItem('role');
+                this.$router.push('/');
+            }
+            console.error("Error:", error);
+            if (error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error);
+            } else {
+                alert('An error occurred. Please try again.');
+            }
+        },
+
+        // New method to validate date
+        validateDate(date) {
+            const selectedDate = new Date(date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            return selectedDate >= today;
         }
     }
 }
