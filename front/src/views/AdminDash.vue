@@ -82,6 +82,39 @@
     </div>
 
     <div class="card mb-4">
+      <div class="card-header">Customers</div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="customer in customers" :key="customer.id">
+              <td>{{ customer.id }}</td>
+              <td>{{ customer.name }}</td>
+              <td>{{ customer.phone }}</td>
+              <td>{{ customer.address }}</td>
+              <td class="text-center">
+                <div v-if="customer.isblocked">
+                  <button class="btn btn-success btn-sm" @click="blockCustomer(customer.id)">Unblock</button>
+                </div>
+                <div v-else>
+                  <button class="btn btn-danger btn-sm" @click="blockCustomer(customer.id)">Block</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card mb-4">
       <div class="card-header">Service Requests</div>
       <div class="card-body">
         <table class="table">
@@ -196,6 +229,7 @@ export default {
     return {
       isAdmin: false,
       professionals: [], // Initialize an empty array to store professionals
+      customers: [],
       services: [],
       serviceseditDetails: {},
       myModal: null,
@@ -217,6 +251,7 @@ export default {
     if (this.isAdmin) {
       this.fetchProfessionals();
       this.fetchServices();
+      this.fetchCustomers();
     }
 
   },
@@ -254,6 +289,29 @@ export default {
 
       }
     },
+
+    async fetchCustomers() {
+      if (!this.isAdmin) return;
+      try {
+        let your_jwt_token = localStorage.getItem('jwt');
+        const response = await axios.get('http://127.0.0.1:5000/api/customers', {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        });
+
+        console.log("Fetched customers:", response); // Debugging line
+        this.customers = response.data;
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          this.$router.push('/');
+        }
+        console.error("Error fetching customers:", error);
+      }
+    },
+
+
     mymodal() {
       this.myModal = new bootstrap.Modal('#serviceModal', {
         keyboard: false
@@ -358,6 +416,31 @@ export default {
           withCredentials: true
         }).then(response => {
           this.fetchProfessionals()
+        })
+        .catch(error => {
+          if (error.response && error.response.status === 401) {
+            this.$router.push('/');
+          }
+          console.error(error);
+        });
+    },
+
+    blockCustomer(id) {
+
+      if (!this.isAdmin) return;
+
+      let your_jwt_token = localStorage.getItem('jwt');
+      const response = axios.post('http://127.0.0.1:5000/api/customerblock/' + id,
+        // passing data to server
+        {},
+        // passing header details
+        {
+          headers: {
+            Authorization: `Bearer ${your_jwt_token}`
+          },
+          withCredentials: true
+        }).then(response => {
+          this.fetchCustomers()
         })
         .catch(error => {
           if (error.response && error.response.status === 401) {

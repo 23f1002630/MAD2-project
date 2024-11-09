@@ -416,6 +416,26 @@ def get_professionals():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/customers", methods=["GET"])
+@jwt_required()
+def get_customers():
+    try:
+        customers = Customer.query.all()
+        customers_list = [
+            {
+                "id": customer.id,
+                "name": customer.fullname,
+                "email": customer.emailid,
+                "phone": customer.phone,
+                "address": customer.address,
+                "pincode": customer.pincode,
+                "isblocked": customer.isblocked
+            }
+            for customer in customers
+        ]
+        return jsonify(customers_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/services", methods=["GET"])
 @cache.memoize(timeout=50)
