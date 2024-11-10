@@ -13,6 +13,7 @@
               <th>Services</th>
               <th>Price</th>
               <th>Description</th>
+              <th>Time required</th>
               <th class="text-center">Action</th>
             </tr>
           </thead>
@@ -23,6 +24,7 @@
               <td>{{ service.services }}</td>
               <td>{{ service.price }}</td>
               <td>{{ service.description }}</td>
+              <td>{{ service.time }} hrs</td>
               <td class="text-center">
                 <button class="btn btn-primary btn-sm me-2" @click="startEditing(service.id)">Edit</button>
                 <button class="btn btn-danger btn-sm" @click="deleteService(service.id)">Delete</button>
@@ -164,6 +166,10 @@
                 <label for="price" class="col-form-label">Price:</label>
                 <input type="text" class="form-control" id="price" v-model="newService.price">
               </div>
+              <div class="mb-3">
+                <label for="time" class="col-form-label">Time:</label>
+                <input type="text" class="form-control" id="time" v-model="newService.time">
+              </div>
             </form>
           </div>
           <div class="modal-footer">
@@ -197,6 +203,10 @@
               <div class="mb-3">
                 <label for="price" class="col-form-label">Price:</label>
                 <input type="text" class="form-control" id="price" v-model="serviceseditDetails.price">
+              </div>
+              <div class="mb-3">
+                <label for="time" class="col-form-label">Time:</label>
+                <input type="text" class="form-control" id="time" v-model="serviceseditDetails.time">
               </div>
             </form>
           </div>
@@ -238,7 +248,8 @@ export default {
       newService: {
         "service": '',
         "description": '',
-        "price": ''
+        "price": '',
+        "time": ''
       }
     };
   },
@@ -337,7 +348,7 @@ export default {
         });
         console.log("Service added:", response.data);
         // Optionally, refresh the list of services or clear the form
-        this.newService = { service: '', description: '', price: '' };
+        this.newService = { service: '', description: '', price: '', time: '' };
         // Close the modal
         this.myModal.hide()
         this.fetchServices();

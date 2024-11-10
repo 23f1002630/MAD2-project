@@ -40,7 +40,7 @@ class Services(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     services = db.Column(db.String, nullable=False)
     price = db.Column(db.Integer, nullable=False)
-    time = db.Column(db.DateTime, default=datetime.utcnow)
+    time = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
 
 class Booking(db.Model):

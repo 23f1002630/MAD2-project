@@ -448,7 +448,8 @@ def get_services():
                 "id": service.id,
                 "services": service.services,
                 "description": service.description,
-                "price": service.price
+                "price": service.price,
+                "time": service.time
             }
             for service in services
         ]
@@ -467,7 +468,8 @@ def get_service_details(id):
             "id": service.id,
             "services": service.services,
             "description": service.description,
-            "price": service.price
+            "price": service.price,
+            "time": service.time
         }
 
         return jsonify(service_details), 200
@@ -561,6 +563,7 @@ def update_service(id):
         service.services = data.get('services')
         service.description = data.get('description')
         service.price = data.get('price')
+        service.time = data.get('time')
         # saving new data to db
         db.session.commit()
         cache.delete_memoized(get_services)
@@ -569,6 +572,7 @@ def update_service(id):
             "services": service.services,
             "description": service.description,
             "price": service.price,
+            "time": service.time
         }
         return jsonify(service_data), 200
     except Exception as e:
@@ -595,19 +599,27 @@ def add_service():
     service_name = data.get('service')
     description = data.get('description')
     price = data.get('price')
+    time = data.get('time')
 
-    if not service_name or not description or not price:
+    # Check for missing data
+    if not service_name or not description or not price or not time:
         return jsonify({'error': 'Missing data'}), 400
 
+    try:
+        price = int(price)
+    except ValueError:
+        return jsonify({'error': 'Price must be an integer'}), 400
+
+    # Create a new service instance
     new_service = Services(services=service_name,
-                           description=description, price=price)
+                           description=description, price=price, time=time)
     db.session.add(new_service)
     db.session.commit()
 
+    # Invalidate cache for the services list
     cache.delete_memoized(get_services)
 
-    return jsonify({'id': new_service.id, 'service': new_service.services, 'description': new_service.description, 'price': new_service.price}), 201
-
+    return jsonify({'id': new_service.id, 'service': new_service.services, 'description': new_service.description, 'price': new_service.price, 'time': new_service.time}), 201
 
 @app.route('/api/getprovidersbyservice/<int:service_id>', methods=['GET'])
 @jwt_required()
