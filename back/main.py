@@ -9,7 +9,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required, set_access_cookies
+from flask_jwt_extended import jwt_required, set_access_cookies, current_user
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from datetime import timedelta
@@ -120,6 +120,49 @@ celery.conf.update(
 celery.conf.timezone = 'Asia/Kolkata'
 
 
+@jwt.user_identity_loader
+def user_identity_lookup(user):
+    print('user_identity_lookup', user)
+    return user
+
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    print('jwt_data', jwt_data)
+    identity = jwt_data["sub"]
+    if identity is None:
+        return None
+    elif identity['role'] == 'admin':
+        return User.query.filter_by(id=identity['user_id']).first()
+    elif identity['role'] == 'customer':
+        return Customer.query.filter_by(id=identity['user_id']).first()
+    elif identity['role'] == 'provider':
+        return Provider.query.filter_by(id=identity['user_id']).first()
+    else:
+        return None
+
+
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            print('decorator called')
+            if (current_user.__tablename__ == 'user'):
+                current_user_role = 'admin'
+            elif (current_user.__tablename__ == 'customer'):
+                current_user_role = 'customer'
+            elif (current_user.__tablename__ == 'provider'):
+                current_user_role = 'provider'
+            print('current_user_role', current_user_role)
+            print('role', role)
+            if current_user is None or current_user_role != role:
+                return {"message": "Unauthorized"}, 401
+            print('Hisham called')
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 @celery.task()
 def monthly_report():
     print('monthly report to users executed')
@@ -170,9 +213,10 @@ def login():
 
     if user:
         if check_password_hash(user.password, password):
-            access_token = create_access_token(identity=email)
+            access_token = create_access_token(
+                identity={'user_id': user.id, 'role': role}),
             response = jsonify(access_token=access_token)
-            set_access_cookies(response, access_token)
+            # set_access_cookies(response, access_token)
             return response
         else:
             return jsonify(error="Invalid credentials"), 401
@@ -396,6 +440,7 @@ def method_name():
 
 @app.route("/api/professionals", methods=["GET"])
 @jwt_required()
+@role_required("admin")
 def get_professionals():
     try:
         professionals = Provider.query.all()
@@ -416,8 +461,10 @@ def get_professionals():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route("/api/customers", methods=["GET"])
 @jwt_required()
+@role_required("admin")
 def get_customers():
     try:
         customers = Customer.query.all()
@@ -436,6 +483,25 @@ def get_customers():
         return jsonify(customers_list), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# @app.route("/api/customer/profile", methods=["GET"])
+# @jwt_required()
+# def get_customer_profile():
+#     try:
+#         customer = Customer.query.get(current_user.id)
+#         customer_profile = {
+#             "id": customer.id,
+#             "name": customer.fullname,
+#             "email": customer.emailid,
+#             "phone": customer.phone,
+#             "address": customer.address,
+#             "pincode": customer.pincode,
+#             "isblocked": customer.isblocked
+#         }
+#         return jsonify(customer_profile), 200
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/api/services", methods=["GET"])
 @cache.memoize(timeout=50)
@@ -621,6 +687,7 @@ def add_service():
 
     return jsonify({'id': new_service.id, 'service': new_service.services, 'description': new_service.description, 'price': new_service.price, 'time': new_service.time}), 201
 
+
 @app.route('/api/getprovidersbyservice/<int:service_id>', methods=['GET'])
 @jwt_required()
 def get_providers_by_service(service_id):
@@ -675,15 +742,16 @@ def create_booking():
     db.session.commit()
 
     return jsonify({
-          'message': 'Booking created successfully',
-          'booking': {
-              'id': new_booking.id,
-              'provider_id': new_booking.provider_id,
-              'customer_id': new_booking.customer_id,
-              'service_id': new_booking.service_id,
-              'date': booking_date.strftime('%Y-%m-%d')
-          }
-      }), 201
+        'message': 'Booking created successfully',
+        'booking': {
+            'id': new_booking.id,
+            'provider_id': new_booking.provider_id,
+            'customer_id': new_booking.customer_id,
+            'service_id': new_booking.service_id,
+            'date': booking_date.strftime('%Y-%m-%d')
+        }
+    }), 201
+
 
 @app.route('/api/provider/today-services/<int:provider_id>', methods=['GET'])
 # @jwt_required()

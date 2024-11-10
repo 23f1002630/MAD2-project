@@ -180,6 +180,7 @@
         </div>
       </div>
     </div>
+    
     <!-- edit service Modal -->
     <div v-show="editServiceModal" class="modal fade" id="serviceseditModal" tabindex="-1"
       aria-labelledby="serviceModalLabel" aria-hidden="true">

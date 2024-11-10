@@ -93,6 +93,48 @@
                 </div>
             </div>
         </div>
+
+        <!-- edit profile -->
+        <!-- <div v-show="editProfileModal" class="modal fade" id="profileeditModal" tabindex="-1"
+            aria-labelledby="profileModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="profileModalLabel">Edit Profile</h1>
+
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="updateProfile(profileeditDetails)">
+                            <div class="mb-3">
+                                <label for="full-name" class="col-form-label">Name:</label>
+                                <input type="text" class="form-control" id="full-name"
+                                    v-model="profileeditDetails.fullname">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="col-form-label">Password:</label>
+                                <textarea class="form-control" id="password"
+                                    v-model="profileeditDetails.description"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="col-form-label">Phone:</label>
+                                <input type="text" class="form-control" id="phone" v-model="profileeditDetails.phone">
+                            </div>
+                            <div class="mb-3">
+                                <label for="address" class="col-form-label">Address:</label>
+                                <input type="text" class="form-control" id="address"
+                                    v-model="profileeditDetails.address">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button @click.prevent="profileform = false" type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button @click="updateProfile(profileeditDetails)" type="submit"
+                            class="btn btn-primary">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div> -->
     </div>
     <div v-else>
         <p>Unauthorized access. Redirecting...</p>
@@ -114,8 +156,12 @@ export default {
             isCustomer: false,
             selectedprofessional: [],
             services: [],
+            // profileeditDetails: {},
             selectedService: {},
             selectedProfessional: {},
+            // editProfileModal: null,
+            // myModal: null,
+            // profileform: false,
             bookingDetails: {
                 date: '', // Added date field
             },
@@ -145,6 +191,48 @@ export default {
 
             this.isCustomer = true;
         },
+
+        // updateProfile(profileDetails) {
+        //     let your_jwt_token = localStorage.getItem('jwt');
+        //     const response = axios.put('http://127.0.0.1:5000/api/customers/profile' + profileDetails.id,
+        //         profileDetails,
+        //         {
+        //             headers: {
+        //                 Authorization: `Bearer ${your_jwt_token}`
+        //             },
+        //             withCredentials: true
+        //         })
+        //         .then(response => {
+        //             this.fetchCustomers()
+        //             this.editProfileModal.hide()
+        //         })
+        //         .catch(error => {
+        //             console.error(error);
+        //         });
+        // },
+
+        // getProfileDetails() {
+        //     let your_jwt_token = localStorage.getItem('jwt');
+        //     const response = axios.get('http://127.0.0.1:5000/api/customers/profile', {
+        //         headers: {
+        //             Authorization: `Bearer ${your_jwt_token}`
+        //         },
+        //         withCredentials: true
+        //     }).then(response => {
+        //         this.profileeditDetails = response.data;
+        //     })
+        //         .catch(error => {
+        //             if (error.response && error.response.status === 401) {
+        //                 this.$router.push('/');
+        //             }
+        //             console.error(error);
+        //         });
+        // },
+
+        // startEditing(id) {
+        //     this.showEditModal()
+        //     this.getProfileDetails()
+        // },
 
         async selectService(id) {
             try {
@@ -235,6 +323,26 @@ export default {
             }
         },
 
+        fetchCustomers() {
+            if (!this.isCustomer) return;
+
+            let your_jwt_token = localStorage.getItem('jwt');
+            const response = axios.get('http://127.0.0.1:5000/api/customers', {
+                headers: {
+                    Authorization: `Bearer ${your_jwt_token}`
+                },
+                withCredentials: true
+            }).then(response => {
+                this.customers = response.data;
+            })
+                .catch(error => {
+                    if (error.response && error.response.status === 401) {
+                        this.$router.push('/');
+                    }
+                    console.error(error);
+                });
+        },
+
         // New method to handle errors
         handleError(error) {
             if (error.response && error.response.status === 401) {
@@ -257,7 +365,14 @@ export default {
             today.setHours(0, 0, 0, 0);
 
             return selectedDate >= today;
-        }
+        },
+        // showEditModal() {
+        //     this.editProfileModal = new bootstrap.Modal('#profileeditModal', {
+        //         keyboard: false
+        //     })
+        //     this.editProfileModal.show()
+        // },
+        
     }
 }
 </script>
