@@ -465,7 +465,7 @@ def get_professionals():
 
 @app.route("/api/customers", methods=["GET"])
 @jwt_required()
-@role_required(["admin"])
+@role_required(["admin", "customer"])
 def get_customers():
     try:
         customers = Customer.query.all()
@@ -524,6 +524,39 @@ def get_services():
         return jsonify(services_list), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Route to get a single customer by ID
+
+
+@app.route('/api/customers/<int:id>', methods=['GET'])
+def get_customer(id):
+    customer = Customer.query.get_or_404(id)
+    return jsonify({
+        'id': customer.id,
+        'emailid': customer.emailid,
+        'fullname': customer.fullname,
+        'phone': customer.phone,
+        'address': customer.address,
+        'pincode': customer.pincode,
+        'isblocked': customer.isblocked
+    })
+
+# Route to update a customer
+
+
+@app.route('/api/customers/<int:id>', methods=['PUT'])
+def update_customer(id):
+    data = request.json
+    customer = Customer.query.get_or_404(id)
+    customer.emailid = data.get('emailid', customer.emailid)
+    customer.password = data.get('password', customer.password)
+    customer.fullname = data.get('fullname', customer.fullname)
+    customer.phone = data.get('phone', customer.phone)
+    customer.address = data.get('address', customer.address)
+    customer.pincode = data.get('pincode', customer.pincode)
+    customer.isblocked = data.get('isblocked', customer.isblocked)
+    db.session.commit()
+    return jsonify({'message': 'Customer updated successfully'})
 
 
 # function for getting details of single service for editing/view purpose
@@ -713,6 +746,9 @@ def get_providers_by_service(service_id):
     ]
 
     return jsonify(providers_list), 200
+
+@app.route('/api/custsearch', methods=['POST'])
+@jwt_required()
 
 
 @app.route("/api/bookings", methods=["POST"])
