@@ -79,6 +79,10 @@
                                 <p>{{ selectedProfessional.phone }}</p>
                             </div>
                             <div class="mb-3">
+                                <label for="remarks" class="col-form-label">Remarks:</label>
+                                <textarea class="form-control" id="remarks" v-model="bookingDetails.remarks"></textarea>
+                            </div>
+                            <div class="mb-3">
                                 <label for="date" class="col-form-label">Date:</label>
                                 <input type="date" class="form-control" id="date" v-model="bookingDetails.date"
                                     required>
@@ -156,14 +160,11 @@ export default {
             isCustomer: false,
             selectedprofessional: [],
             services: [],
-            // profileeditDetails: {},
             selectedService: {},
             selectedProfessional: {},
-            // editProfileModal: null,
-            // myModal: null,
-            // profileform: false,
             bookingDetails: {
                 date: '', // Added date field
+                remarks: '' // Added remarks field
             },
             requestModal: null,
         }
@@ -191,48 +192,6 @@ export default {
 
             this.isCustomer = true;
         },
-
-        // updateProfile(profileDetails) {
-        //     let your_jwt_token = localStorage.getItem('jwt');
-        //     const response = axios.put('http://127.0.0.1:5000/api/customers/profile' + profileDetails.id,
-        //         profileDetails,
-        //         {
-        //             headers: {
-        //                 Authorization: `Bearer ${your_jwt_token}`
-        //             },
-        //             withCredentials: true
-        //         })
-        //         .then(response => {
-        //             this.fetchCustomers()
-        //             this.editProfileModal.hide()
-        //         })
-        //         .catch(error => {
-        //             console.error(error);
-        //         });
-        // },
-
-        // getProfileDetails() {
-        //     let your_jwt_token = localStorage.getItem('jwt');
-        //     const response = axios.get('http://127.0.0.1:5000/api/customers/profile', {
-        //         headers: {
-        //             Authorization: `Bearer ${your_jwt_token}`
-        //         },
-        //         withCredentials: true
-        //     }).then(response => {
-        //         this.profileeditDetails = response.data;
-        //     })
-        //         .catch(error => {
-        //             if (error.response && error.response.status === 401) {
-        //                 this.$router.push('/');
-        //             }
-        //             console.error(error);
-        //         });
-        // },
-
-        // startEditing(id) {
-        //     this.showEditModal()
-        //     this.getProfileDetails()
-        // },
 
         async selectService(id) {
             try {
@@ -273,14 +232,14 @@ export default {
 
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
-                console.log(localStorage.getItem('userId'));
                 const customerId = localStorage.getItem('userId'); // Get actual customer ID
 
                 const response = await axios.post('http://127.0.0.1:5000/api/bookings', {
                     provider_id: this.selectedProfessional.id,
                     customer_id: customerId,
                     service_id: this.selectedService.id,
-                    date: this.bookingDetails.date // Send date instead of time
+                    date: this.bookingDetails.date, // Send date
+                    remarks: this.bookingDetails.remarks // Send remarks
                 }, {
                     headers: {
                         Authorization: `Bearer ${your_jwt_token}`
@@ -301,7 +260,8 @@ export default {
         closeModal() {
             if (this.requestModal) {
                 this.requestModal.hide();
-                this.bookingDetails.date = ''; // Reset date instead of time
+                this.bookingDetails.date = ''; // Reset date
+                this.bookingDetails.remarks = ''; // Reset remarks
             }
         },
 
@@ -324,27 +284,6 @@ export default {
             }
         },
 
-        fetchCustomers() {
-            if (!this.isCustomer) return;
-
-            let your_jwt_token = localStorage.getItem('jwt');
-            const response = axios.get('http://127.0.0.1:5000/api/customers', {
-                headers: {
-                    Authorization: `Bearer ${your_jwt_token}`
-                },
-                withCredentials: true
-            }).then(response => {
-                this.customers = response.data;
-            })
-                .catch(error => {
-                    if (error.response && error.response.status === 401) {
-                        this.$router.push('/');
-                    }
-                    console.error(error);
-                });
-        },
-
-        // New method to handle errors
         handleError(error) {
             if (error.response && error.response.status === 401) {
                 localStorage.removeItem('jwt');
@@ -357,23 +296,7 @@ export default {
             } else {
                 alert('An error occurred. Please try again.');
             }
-        },
-
-        // New method to validate date
-        validateDate(date) {
-            const selectedDate = new Date(date);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            return selectedDate >= today;
-        },
-        // showEditModal() {
-        //     this.editProfileModal = new bootstrap.Modal('#profileeditModal', {
-        //         keyboard: false
-        //     })
-        //     this.editProfileModal.show()
-        // },
-        
+        }
     }
 }
 </script>

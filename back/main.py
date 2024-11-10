@@ -747,9 +747,6 @@ def get_providers_by_service(service_id):
 
     return jsonify(providers_list), 200
 
-@app.route('/api/custsearch', methods=['POST'])
-@jwt_required()
-
 
 @app.route("/api/bookings", methods=["POST"])
 @jwt_required()
@@ -759,9 +756,10 @@ def create_booking():
     provider_id = data.get('provider_id')
     customer_id = data.get('customer_id')
     service_id = data.get('service_id')
+    remarks = data.get('remarks')
     booking_date = data.get('date')
 
-    if not all([provider_id, customer_id, service_id, booking_date]):
+    if not all([provider_id, customer_id, service_id,remarks, booking_date]):
         return jsonify({'error': 'Missing required fields'}), 400
 
     try:
@@ -776,7 +774,7 @@ def create_booking():
 
     new_booking = Booking(provider_id=provider_id,
                           customer_id=customer_id, service_id=service_id,
-                          date=booking_date)
+                          date=booking_date, remarks=remarks)
     db.session.add(new_booking)
     db.session.commit()
 
@@ -787,6 +785,7 @@ def create_booking():
             'provider_id': new_booking.provider_id,
             'customer_id': new_booking.customer_id,
             'service_id': new_booking.service_id,
+            'remarks': new_booking.remarks,
             'date': booking_date.strftime('%Y-%m-%d')
         }
     }), 201
