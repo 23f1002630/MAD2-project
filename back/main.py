@@ -215,9 +215,10 @@ def login():
         if check_password_hash(user.password, password):
             access_token = create_access_token(
                 identity={'user_id': user.id, 'role': role}),
-            response = jsonify(access_token=access_token)
+            response = jsonify(access_token=access_token, id=user.id)
             # set_access_cookies(response, access_token)
-            return response
+
+            return response, 200
         else:
             return jsonify(error="Invalid credentials"), 401
     else:
@@ -527,6 +528,7 @@ def get_services():
 # function for getting details of single service for editing/view purpose
 @app.route('/api/services/<id>', methods=["GET"])
 @jwt_required()
+@role_required("admin")
 def get_service_details(id):
     try:
         service = Services.query.get(id)

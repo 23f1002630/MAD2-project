@@ -40,6 +40,7 @@
       async logout() {
       localStorage.removeItem('jwt');
       localStorage.removeItem('role');
+      localStorage.removeItem('userId');
       if (this.$route.path != '/') {
         this.$router.push('/')
       }

@@ -97,6 +97,7 @@ export default {
 
           localStorage.setItem('jwt', data.access_token);
           localStorage.setItem('role', this.role);
+          localStorage.setItem('userId', data.id);
           if (this.role === 'admin') {
             this.$router.push('/admindash');
           } else if (this.role === 'customer') {

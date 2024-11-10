@@ -273,7 +273,8 @@ export default {
 
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
-                const customerId = localStorage.getItem('userId') || "1"; // Get actual customer ID
+                console.log(localStorage.getItem('userId'));
+                const customerId = localStorage.getItem('userId'); // Get actual customer ID
 
                 const response = await axios.post('http://127.0.0.1:5000/api/bookings', {
                     provider_id: this.selectedProfessional.id,
