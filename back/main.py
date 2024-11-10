@@ -155,7 +155,7 @@ def role_required(role):
                 current_user_role = 'provider'
             print('current_user_role', current_user_role)
             print('role', role)
-            if current_user is None or current_user_role != role:
+            if current_user is None or current_user_role not in role:
                 return {"message": "Unauthorized"}, 401
             print('Hisham called')
             return f(*args, **kwargs)
@@ -441,7 +441,7 @@ def method_name():
 
 @app.route("/api/professionals", methods=["GET"])
 @jwt_required()
-@role_required("admin")
+@role_required(["admin"])
 def get_professionals():
     try:
         professionals = Provider.query.all()
@@ -465,7 +465,7 @@ def get_professionals():
 
 @app.route("/api/customers", methods=["GET"])
 @jwt_required()
-@role_required("admin")
+@role_required(["admin"])
 def get_customers():
     try:
         customers = Customer.query.all()
@@ -507,6 +507,7 @@ def get_customers():
 @app.route("/api/services", methods=["GET"])
 @cache.memoize(timeout=50)
 @jwt_required()
+@role_required(["admin", "customer"])
 def get_services():
     try:
         services = Services.query.all()
@@ -528,7 +529,7 @@ def get_services():
 # function for getting details of single service for editing/view purpose
 @app.route('/api/services/<id>', methods=["GET"])
 @jwt_required()
-@role_required("admin")
+@role_required(["admin"])
 def get_service_details(id):
     try:
         service = Services.query.get(id)
