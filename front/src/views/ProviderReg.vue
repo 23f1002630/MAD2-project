@@ -9,18 +9,7 @@
           </div>
           <div class="col">
             <select class="form-control" v-model="selectedservice">
-              <option v-for="service in services" :key="service.id" :value="service.id">{{ service.services }}</option>
-              <!-- <option value="" disabled selected>Select service</option> -->
-              <!-- <option value="cleaningservices">Cleaning Services</option>
-              <option value="maintenanceandrepair">Maintenance and Repair</option>
-              <option value="landscapingandgardening">Landscaping and Gardening</option>
-              <option value="pestcontrol">Pest Control</option>
-              <option value="homeimprovementandrenovation">Home Improvement and Renovation</option>
-              <option value="securityandsafety">Security and Safety</option>
-              <option value="movingandstorage">Moving and Storage</option>
-              <option value="specialtyservices">Specialty Services</option>
-              <option value="organizinganddecluttering">Organizing and Decluttering</option>
-              <option value="petservices">Pet Services</option> -->
+              <option v-for="service in services" :key="service.id" :value="service.id">{{ service.services }}</option>            
             </select>
           </div>
         </div>
