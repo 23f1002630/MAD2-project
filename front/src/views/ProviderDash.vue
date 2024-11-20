@@ -17,7 +17,7 @@
                 <tbody>
                     <tr v-for="service in todayServices" :key="service.id">
                         <td>{{ service.id }}</td>
-                        <td>{{ service.customerName }}</td>
+                        <td>{{ service.customer_name }}</td>
                         <td>{{ service.phone }}</td>
                         <td>{{ service.location }}</td>
                         <td>
@@ -31,7 +31,38 @@
             </table>
         </div>
 
-        <div class="card p-4">
+        <div class="card p-4 mb-4 container">
+            <h3 class="text-center text-primary mb-4">Service Requests</h3>
+            <p>{{ bookings.length }}</p>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Location</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="booking in bookings" :key="booking.id">
+                        <td>{{ booking.id }}</td>
+
+                        <td>{{ booking.customer }}</td>
+                        <td>{{ booking.phone }}</td>
+                        <td>{{ booking.address }} <br> pin: {{ booking.pincode }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm me-2"
+                                @click="approveService(booking.id)">Approve</button>
+                            <button class="btn btn-primary btn-sm me-2"
+                                @click="rejectService(booking.id)">Reject</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- <div class="card p-4">
             <h3 class="text-center text-primary mb-4">Closed Services</h3>
             <table class="table table-bordered">
                 <thead>
@@ -55,7 +86,7 @@
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </div> -->
     </div>
     <div v-else>
         <p>Unauthorized access. Redirecting...</p>
@@ -75,18 +106,21 @@ export default {
         return {
             isProvider: false,
             todayServices: [],
-            closedServices: []
+            closedServices: [],
+            bookings: []
         };
     },
 
     created() {
         this.checkProviderStatus();
+        this.fetchBookings();
     },
 
     mounted() {
         if (this.isProvider) {
             this.fetchTodayServices();
-            this.fetchClosedServices();
+            // this.fetchClosedServices();
+            this.fetchBookings();
         }
     },
 
@@ -118,32 +152,32 @@ export default {
             }
         },
 
-        async fetchClosedServices() {
-            if (!this.isProvider) return;
+        // async fetchClosedServices() {
+        //     if (!this.isProvider) return;
 
-            try {
-                const token = localStorage.getItem('jwt');
-                const providerId = localStorage.getItem('userId');
+        //     try {
+        //         const token = localStorage.getItem('jwt');
+        //         const providerId = localStorage.getItem('userId');
 
-                const response = await axios.get(`http://127.0.0.1:5000/api/provider/closed-services/${providerId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    },
-                    withCredentials: true
-                });
+        //         const response = await axios.get(`http://127.0.0.1:5000/api/provider/closed-services/${providerId}`, {
+        //             headers: {
+        //                 Authorization: `Bearer ${token}`
+        //             },
+        //             withCredentials: true
+        //         });
 
-                if (response.data && response.data.status === 'success') {
-                    this.closedServices = response.data.data;
-                }
-            } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    localStorage.removeItem('jwt');
-                    localStorage.removeItem('role');
-                    this.$router.push('/');
-                }
-                console.error("Error fetching closed services:", error);
-            }
-        },
+        //         if (response.data && response.data.status === 'success') {
+        //             this.closedServices = response.data.data;
+        //         }
+        //     } catch (error) {
+        //         if (error.response && error.response.status === 401) {
+        //             localStorage.removeItem('jwt');
+        //             localStorage.removeItem('role');
+        //             this.$router.push('/');
+        //         }
+        //         console.error("Error fetching closed services:", error);
+        //     }
+        // },
         checkProviderStatus() {
             const role = localStorage.getItem('role');
             const token = localStorage.getItem('jwt');
@@ -183,39 +217,39 @@ export default {
             }
         },
 
-        async fetchClosedServices() {
+        // async fetchClosedServices() {
+        //     if (!this.isProvider) return;
+
+        //     try {
+        //         const token = localStorage.getItem('jwt');
+        //         const providerId = localStorage.getItem('userId');
+
+        //         const response = await axios.get(`http://127.0.0.1:5000/api/provider/closed-services/${providerId}`, {
+        //             headers: {
+        //                 Authorization: `Bearer ${token}`
+        //             },
+        //             withCredentials: true
+        //         });
+
+        //         if (response.data) {
+        //             this.closedServices = response.data;
+        //         }
+        //     } catch (error) {
+        //         if (error.response && error.response.status === 401) {
+        //             localStorage.removeItem('jwt');
+        //             localStorage.removeItem('role');
+        //             this.$router.push('/');
+        //         }
+        //         console.error("Error fetching closed services:", error);
+        //     }
+        // },
+
+        async approveService(bookingId) {
             if (!this.isProvider) return;
 
             try {
                 const token = localStorage.getItem('jwt');
-                const providerId = localStorage.getItem('userId');
-
-                const response = await axios.get(`http://127.0.0.1:5000/api/provider/closed-services/${providerId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    },
-                    withCredentials: true
-                });
-
-                if (response.data) {
-                    this.closedServices = response.data;
-                }
-            } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    localStorage.removeItem('jwt');
-                    localStorage.removeItem('role');
-                    this.$router.push('/');
-                }
-                console.error("Error fetching closed services:", error);
-            }
-        },
-
-        async approveService(serviceId) {
-            if (!this.isProvider) return;
-
-            try {
-                const token = localStorage.getItem('jwt');
-                const response = await axios.post(`http://127.0.0.1:5000/api/provider/approve-service/${serviceId}`, {}, {
+                const response = await axios.post(`http://127.0.0.1:5000/api/provider/approve-service/${bookingId}`, {}, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     },
@@ -225,7 +259,7 @@ export default {
                 if (response.data) {
                     // Refresh the services lists
                     this.fetchTodayServices();
-                    this.fetchClosedServices();
+                    // this.fetchClosedServices();
                 }
             } catch (error) {
                 if (error.response && error.response.status === 401) {
@@ -242,7 +276,7 @@ export default {
 
             try {
                 const token = localStorage.getItem('jwt');
-                const response = await axios.post(`http://127.0.0.1:5000/api/provider/reject-service/${serviceId}`, {}, {
+                const response = await axios.post(`http://127.0.0.1:5000/api/provider/reject-service/${bookingId}`, {}, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     },
@@ -261,7 +295,60 @@ export default {
                 }
                 console.error("Error rejecting service:", error);
             }
-        }
+        },
+
+        // async fetchBookings() {
+        //     try {
+        //         const token = localStorage.getItem('jwt');
+        //         const response = await axios.get('http://127.0.0.1:5000/api/service-requests', {
+        //             headers: {
+        //                 Authorization: `Bearer ${token}`
+        //             },
+        //             withCredentials: true
+        //         });
+
+        //         if (response.data) {
+        //             this.bookings = response.data;
+        //         }
+        //         console.log(this.bookings);
+        //     } catch (error) {
+        //         if (error.response && error.response.status === 401) {
+        //             localStorage.removeItem('jwt');
+        //             localStorage.removeItem('role');
+        //             this.$router.push('/');
+        //         }
+        //         console.error("Error fetching bookings:", error);
+        //     }
+        // }
+
+        fetchBookings() {
+            // Check if the user is an admin before proceeding
+            console.log('Hi hello');
+
+            // Retrieve the JWT token from localStorage
+            let your_jwt_token = localStorage.getItem('jwt');
+
+            // Make an API call to fetch bookings
+            axios.get('http://127.0.0.1:5000/api/service-requests', {
+                headers: {
+                    Authorization: `Bearer ${your_jwt_token}`
+                },
+                withCredentials: true
+            })
+                .then(response => {
+                    // Assign the response data to the bookings property
+                    this.bookings = response.data.data;
+                    console.log(this.bookings);
+                })
+                .catch(error => {
+                    // Handle unauthorized access by redirecting to the home page
+                    if (error.response && error.response.status === 401) {
+                        this.$router.push('/');
+                    }
+                    // Log any errors encountered during the API call
+                    console.error("Error fetching bookings:", error);
+                });
+        },
     }
 };
 </script>

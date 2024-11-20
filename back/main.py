@@ -2,7 +2,7 @@ from flask import Flask, url_for
 from flask import jsonify
 from flask import request
 from database import db
-from sqlalchemy import and_
+from sqlalchemy import and_, desc
 from models import *
 from models import user as User
 from datetime import datetime
@@ -581,6 +581,7 @@ def get_service_details(id):
 
 @app.route('/api/professionalblock/<id>', methods=["POST"])
 @jwt_required()
+@role_required(["admin"])
 def block_professional(id):
     try:
         professional = Provider.query.get(id)
@@ -593,6 +594,7 @@ def block_professional(id):
 
 @app.route('/api/customerblock/<id>', methods=["POST"])
 @jwt_required()
+@role_required(["admin"])
 def block_customer(id):
     try:
         customer = Customer.query.get(id)
@@ -629,6 +631,7 @@ def block_customer(id):
 
 @app.route('/api/approveprofessional/<id>', methods=["POST"])
 @jwt_required(id)
+@role_required(["admin"])
 def approve_professional(id):
     try:
         print('id', id)
@@ -643,6 +646,7 @@ def approve_professional(id):
 
 @app.route('/api/rejectprofessional/<id>', methods=["POST"])
 @jwt_required()
+@role_required(["admin"])
 def reject_professional(id):
     try:
         professional = Provider.query.get(id)
@@ -655,6 +659,7 @@ def reject_professional(id):
 
 @app.route('/api/services/<id>', methods=["PUT"])
 @jwt_required()
+@role_required(["admin"])
 def update_service(id):
     try:
         # fetched service with id
@@ -683,6 +688,7 @@ def update_service(id):
 
 @app.route('/api/services/<int:service_id>', methods=['DELETE'])
 @jwt_required()
+@role_required(["admin"])
 def delete_service(service_id):
     service = Services.query.get(service_id)
     if service is None:
@@ -696,6 +702,7 @@ def delete_service(service_id):
 
 @app.route('/api/services', methods=['POST'])
 @jwt_required()
+@role_required(["admin"])
 def add_service():
     data = request.json
     service_name = data.get('service')
@@ -759,7 +766,7 @@ def create_booking():
     remarks = data.get('remarks')
     booking_date = data.get('date')
 
-    if not all([provider_id, customer_id, service_id,remarks, booking_date]):
+    if not all([provider_id, customer_id, service_id, remarks, booking_date]):
         return jsonify({'error': 'Missing required fields'}), 400
 
     try:
@@ -789,6 +796,94 @@ def create_booking():
             'date': booking_date.strftime('%Y-%m-%d')
         }
     }), 201
+
+
+@app.route('/api/service-requests', methods=['GET'])
+@jwt_required()
+def get_service_requests():
+    """Get all pending service requests"""
+    try:
+        # Query pending bookings, ordered by most recent first
+
+        bookings = Booking.query.filter_by(status='pending', provider_id=current_user.id)\
+            .order_by(desc(Booking.date))\
+            .all()
+
+        # Join with necessary tables to get customer information
+        booking_list = []
+        for booking in bookings:
+            # You'll need to adjust this based on your User model structure
+            customer = Customer.query.get(booking.customer_id)
+            provider = Provider.query.get(booking.provider_id)
+            booking_data = {
+                'id': booking.id,
+                'customer': customer.fullname,
+                'phone': customer.phone,
+                'address': customer.address,
+                'pincode': customer.pincode,
+                'date': booking.date.strftime('%Y-%m-%d'),
+                'remarks': booking.remarks
+            }
+            booking_list.append(booking_data)
+
+        return jsonify({
+            'status': 'success',
+            'data': booking_list
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/service-requests/<int:booking_id>/approve', methods=['POST'])
+@jwt_required()
+def approve_service(booking_id):
+    """Approve a service request"""
+    try:
+        booking = Booking.query.get_or_404(booking_id)
+
+        # Update booking status
+        booking.status = 'approved'
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Service request approved successfully'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/service-requests/<int:booking_id>/reject', methods=['POST'])
+@jwt_required()
+def reject_service(booking_id):
+    """Reject a service request"""
+    try:
+        booking = Booking.query.get_or_404(booking_id)
+
+        # Update booking status
+        booking.status = 'rejected'
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Service request rejected successfully'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 
 @app.route('/api/provider/today-services/<int:provider_id>', methods=['GET'])
