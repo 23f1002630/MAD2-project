@@ -42,6 +42,9 @@
     <div class="card mb-4">
       <div class="card-header">Professionals</div>
       <div class="card-body">
+        <div class="mb-3">
+          <input type="text" class="form-control" placeholder="Search by name or service" v-model="searchQuery" />
+        </div>
         <table class="table">
           <thead>
             <tr>
@@ -53,7 +56,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="professional in professionals" :key="professional.id">
+            <tr v-for="professional in filteredProfessionals" :key="professional.id">
               <td>{{ professional.id }}</td>
               <td>{{ professional.name }}</td>
               <td>{{ professional.experience }}</td>
@@ -180,7 +183,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- edit service Modal -->
     <div v-show="editServiceModal" class="modal fade" id="serviceseditModal" tabindex="-1"
       aria-labelledby="serviceModalLabel" aria-hidden="true">
@@ -251,7 +254,8 @@ export default {
         "description": '',
         "price": '',
         "time": ''
-      }
+      },
+      searchQuery: '',
     };
   },
 
@@ -266,6 +270,21 @@ export default {
       this.fetchCustomers();
     }
 
+  },
+
+  computed: {
+    filteredProfessionals() {
+      // Filter professionals based on search query
+      return this.professionals.filter((professional) => {
+        const nameMatch = professional.name
+          .toLowerCase()
+          .includes(this.searchQuery.toLowerCase());
+        const serviceMatch = professional.service_name
+          .toLowerCase()
+          .includes(this.searchQuery.toLowerCase());
+        return nameMatch || serviceMatch;
+      });
+    },
   },
   methods: {
     checkAdminStatus() {
