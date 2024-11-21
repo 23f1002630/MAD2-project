@@ -20,11 +20,13 @@
                         <td>{{ service.customer_name }}</td>
                         <td>{{ service.phone }}</td>
                         <td>{{ service.location }}</td>
-                        <td>
-                            <button class="btn btn-primary btn-sm me-2"
-                                @click="approveService(service.id)">Approve</button>
-                            <button class="btn btn-primary btn-sm me-2"
-                                @click="rejectService(service.id)">Reject</button>
+                        <td class="text-center">
+                            <div v-if="service.status === 'closed'">
+                                <p>Closed</p>
+                            </div>
+                            <div v-else>
+                                <button class="btn btn-primary btn-sm me-2" @click="closeService(service.id)">Close</button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -33,13 +35,13 @@
 
         <div class="card p-4 mb-4 container">
             <h3 class="text-center text-primary mb-4">Service Requests</h3>
-            <p>{{ bookings.length }}</p>
             <table class="table table-bordered">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Customer Name</th>
                         <th>Phone</th>
+                        <th>Date</th>
                         <th>Location</th>
                         <th>Action</th>
                     </tr>
@@ -47,9 +49,9 @@
                 <tbody>
                     <tr v-for="booking in bookings" :key="booking.id">
                         <td>{{ booking.id }}</td>
-
                         <td>{{ booking.customer }}</td>
                         <td>{{ booking.phone }}</td>
+                        <td>{{ booking.date }}</td>
                         <td>{{ booking.address }} <br> pin: {{ booking.pincode }}</td>
                         <td>
                             <button class="btn btn-primary btn-sm me-2"
@@ -132,7 +134,7 @@ export default {
                 const token = localStorage.getItem('jwt');
                 const providerId = localStorage.getItem('userId');
 
-                const response = await axios.get(`http://127.0.0.1:5000/api/provider/today-services/${providerId}`, {
+                const response = await axios.get(`http://127.0.0.1:5000//api/today-services/${providerId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     },
@@ -149,6 +151,35 @@ export default {
                     this.$router.push('/');
                 }
                 console.error("Error fetching today's services:", error);
+            }
+        },
+
+        async closeService(serviceId) {
+            if (!this.isProvider) return;
+
+            try {
+                const token = localStorage.getItem('jwt');
+                const providerId = localStorage.getItem('userId');
+
+                const response = await axios.post(`http://127.0.0.1:5000/api/close-service/${serviceId}`, {
+                    providerId: providerId
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data && response.data.status === 'success') {
+                    this.fetchTodayServices();
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error closing service:", error);
             }
         },
 
@@ -249,7 +280,7 @@ export default {
 
             try {
                 const token = localStorage.getItem('jwt');
-                const response = await axios.post(`http://127.0.0.1:5000/api/provider/approve-service/${bookingId}`, {}, {
+                const response = await axios.post(`http://127.0.0.1:5000/api/service-requests/approve/${bookingId}`, {}, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     },
@@ -258,7 +289,7 @@ export default {
 
                 if (response.data) {
                     // Refresh the services lists
-                    this.fetchTodayServices();
+                    this.fetchBookings();
                     // this.fetchClosedServices();
                 }
             } catch (error) {
@@ -276,7 +307,7 @@ export default {
 
             try {
                 const token = localStorage.getItem('jwt');
-                const response = await axios.post(`http://127.0.0.1:5000/api/provider/reject-service/${bookingId}`, {}, {
+                const response = await axios.post(`http://127.0.0.1:5000/api/service-requests/reject/${bookingId}`, {}, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     },
@@ -285,7 +316,7 @@ export default {
 
                 if (response.data) {
                     // Refresh the services lists
-                    this.fetchTodayServices();
+                    this.fetchBookings();
                 }
             } catch (error) {
                 if (error.response && error.response.status === 401) {
@@ -297,29 +328,6 @@ export default {
             }
         },
 
-        // async fetchBookings() {
-        //     try {
-        //         const token = localStorage.getItem('jwt');
-        //         const response = await axios.get('http://127.0.0.1:5000/api/service-requests', {
-        //             headers: {
-        //                 Authorization: `Bearer ${token}`
-        //             },
-        //             withCredentials: true
-        //         });
-
-        //         if (response.data) {
-        //             this.bookings = response.data;
-        //         }
-        //         console.log(this.bookings);
-        //     } catch (error) {
-        //         if (error.response && error.response.status === 401) {
-        //             localStorage.removeItem('jwt');
-        //             localStorage.removeItem('role');
-        //             this.$router.push('/');
-        //         }
-        //         console.error("Error fetching bookings:", error);
-        //     }
-        // }
 
         fetchBookings() {
             // Check if the user is an admin before proceeding

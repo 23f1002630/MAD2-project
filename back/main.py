@@ -838,7 +838,7 @@ def get_service_requests():
         }), 500
 
 
-@app.route('/api/service-requests/<int:booking_id>/approve', methods=['POST'])
+@app.route('/api/service-requests/approve/<int:booking_id>', methods=['POST'])
 @jwt_required()
 def approve_service(booking_id):
     """Approve a service request"""
@@ -862,7 +862,7 @@ def approve_service(booking_id):
         }), 500
 
 
-@app.route('/api/service-requests/<int:booking_id>/reject', methods=['POST'])
+@app.route('/api/service-requests/reject/<int:booking_id>', methods=['POST'])
 @jwt_required()
 def reject_service(booking_id):
     """Reject a service request"""
@@ -887,7 +887,7 @@ def reject_service(booking_id):
 
 
 @app.route('/api/provider/today-services/<int:provider_id>', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_provider_today_services(provider_id):
     print('hisham Hi hello')
     today = date.today()
@@ -905,10 +905,33 @@ def get_provider_today_services(provider_id):
             'service_id': booking.service_id,
             'customer_name': customer.fullname,
             'phone': customer.phone,
-            'location': customer.address
+            'location': customer.address,
+            'status': booking.status
         })
 
     return jsonify(response), 200
+
+@app.route('/api/close-service/<int:booking_id>', methods=['POST'])
+@jwt_required()
+def close_service(booking_id):
+    try:
+        booking = Booking.query.get_or_404(booking_id)
+
+        # Update booking status
+        booking.status = 'closed'
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Service closed successfully'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 
 @app.route('/api/provider/closed-services/<int:provider_id>', methods=['GET'])
@@ -959,6 +982,8 @@ def get_provider_closed_services(provider_id):
             'status': 'error',
             'message': str(e)
         }), 500
+    
+
 
 
 @app.route("/protected", methods=["GET"])
