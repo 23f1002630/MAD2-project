@@ -33,12 +33,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="service in serviceRequests" :key="service.id">
+                    <tr v-for="service in bookings" :key="service.id">
                         <td>{{ service.id }}</td>
-                        <td>{{ service.services }}</td>
-                        <td>{{ service.professional }}</td>
+                        <td>{{ service.service_name }}</td>
+                        <td>{{ service.professional_name }}</td>
                         <td>{{ service.date }}</td>
-                        <!-- <td><span class="badge bg-warning text-dark">Close it?</span></td> -->
+                        <td>{{ service.status }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -149,7 +149,7 @@ export default {
             services: [],
             selectedService: {},
             selectedProfessional: {},
-            serviceRequests: [],
+            bookings: [],
             bookingDetails: {
                 date: '', // Added date field
                 remarks: '' // Added remarks field
@@ -165,10 +165,39 @@ export default {
     mounted() {
         if (this.isCustomer) {
             this.fetchServices();
+            this.fetchServiceHistory();
+            this.fetchBookings();
         }
+        
     },
 
     methods: {
+        async fetchServiceHistory() {
+            try {
+                const token = localStorage.getItem('jwt'); // Retrieve JWT token
+                const customerId = localStorage.getItem('userId'); // Retrieve customer ID
+
+                const response = await axios.get(`http://127.0.0.1:5000/api/service-history/${customerId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}` // Pass the token in the Authorization header
+                    },
+                    withCredentials: true // Include credentials
+                });
+
+                if (response.data && response.status === 200) {
+                    this.serviceHistory = response.data; // Set the fetched data to the serviceHistory property
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    // Handle unauthorized error
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/'); // Redirect to login page
+                }
+                console.error("Error fetching service history:", error); // Log other errors
+            }
+        },
+
         checkCustomerStatus() {
             const role = localStorage.getItem('role');
             const token = localStorage.getItem('jwt');
@@ -270,6 +299,35 @@ export default {
             } catch (error) {
                 this.handleError(error);
             }
+        },
+
+        fetchBookings() {
+            // Check if the user is an admin before proceeding
+            console.log('Hi hello');
+
+            // Retrieve the JWT token from localStorage
+            let your_jwt_token = localStorage.getItem('jwt');
+
+            // Make an API call to fetch bookings
+            axios.get('http://127.0.0.1:5000/api/service-requests', {
+                headers: {
+                    Authorization: `Bearer ${your_jwt_token}`
+                },
+                withCredentials: true
+            })
+                .then(response => {
+                    // Assign the response data to the bookings property
+                    this.bookings = response.data.data;
+                    console.log(this.bookings);
+                })
+                .catch(error => {
+                    // Handle unauthorized access by redirecting to the home page
+                    if (error.response && error.response.status === 401) {
+                        this.$router.push('/');
+                    }
+                    // Log any errors encountered during the API call
+                    console.error("Error fetching bookings:", error);
+                });
         },
 
         handleError(error) {

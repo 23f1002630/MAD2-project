@@ -25,7 +25,8 @@
                                 <p>Closed</p>
                             </div>
                             <div v-else>
-                                <button class="btn btn-primary btn-sm me-2" @click="closeService(service.id)">Close</button>
+                                <button class="btn btn-primary btn-sm me-2"
+                                    @click="closeService(service.id)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -127,32 +128,32 @@ export default {
     },
 
     methods: {
-        async fetchTodayServices() {
-            if (!this.isProvider) return;
+        // async fetchTodayServices() {
+        //     if (!this.isProvider) return;
 
-            try {
-                const token = localStorage.getItem('jwt');
-                const providerId = localStorage.getItem('userId');
+        //     try {
+        //         const token = localStorage.getItem('jwt');
+        //         const providerId = localStorage.getItem('userId');
 
-                const response = await axios.get(`http://127.0.0.1:5000//api/today-services/${providerId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    },
-                    withCredentials: true
-                });
+        //         const response = await axios.get(`http://127.0.0.1:5000//api/today-services/${providerId}`, {
+        //             headers: {
+        //                 Authorization: `Bearer ${token}`
+        //             },
+        //             withCredentials: true
+        //         });
 
-                if (response.data && response.data.status === 'success') {
-                    this.todayServices = response.data.data;
-                }
-            } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    localStorage.removeItem('jwt');
-                    localStorage.removeItem('role');
-                    this.$router.push('/');
-                }
-                console.error("Error fetching today's services:", error);
-            }
-        },
+        //         if (response.data && response.data.status === 'success') {
+        //             this.todayServices = response.data.data;
+        //         }
+        //     } catch (error) {
+        //         if (error.response && error.response.status === 401) {
+        //             localStorage.removeItem('jwt');
+        //             localStorage.removeItem('role');
+        //             this.$router.push('/');
+        //         }
+        //         console.error("Error fetching today's services:", error);
+        //     }
+        // },
 
         async closeService(serviceId) {
             if (!this.isProvider) return;
@@ -290,6 +291,7 @@ export default {
                 if (response.data) {
                     // Refresh the services lists
                     this.fetchBookings();
+                    window.location.reload();
                     // this.fetchClosedServices();
                 }
             } catch (error) {

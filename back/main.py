@@ -121,16 +121,17 @@ mail = init_mail()
 
 @celery.task()
 def daily_reminder_to_professional():
-  with app.app_context():
-      professionals = Provider.query.all()
-      for prof in professionals:
-          # Check if there are any pending bookings for the professional
-          pending_booking_exists = Booking.query.filter_by(provider_id=prof.id, status='pending').first() is not None
+    with app.app_context():
+        professionals = Provider.query.all()
+        for prof in professionals:
+            # Check if there are any pending bookings for the professional
+            pending_booking_exists = Booking.query.filter_by(
+                provider_id=prof.id, status='pending').first() is not None
 
-          if pending_booking_exists:
-              with mail.connect() as conn:
-                  subject = "Home Master Reminder"
-                  message = """
+            if pending_booking_exists:
+                with mail.connect() as conn:
+                    subject = "Home Master Reminder"
+                    message = """
                       <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
                           <h1 style="color: #28a745;">Reminder: Visit Home Master</h1>
                           <p>This is a friendly reminder to visit Home Master and check your pending requests. Customers are waiting for you!</p>
@@ -142,20 +143,25 @@ def daily_reminder_to_professional():
                           <p>Best regards,<br>Home Master</p>
                       </div>
                       """
-                  msg = Message(recipients=[prof.emailid], html=message, subject=subject)
-                  conn.send(msg)
+                    msg = Message(
+                        recipients=[prof.emailid], html=message, subject=subject)
+                    conn.send(msg)
 
-              sse.publish({"message": "You have not placed any order, please place now!", "color": "alert alert-primary"}, type=prof.emailid)
+                sse.publish({"message": "You have not placed any order, please place now!",
+                            "color": "alert alert-primary"}, type=prof.emailid)
 
-      print('Daily reminder to users executed')
-      return {"status": "success"}
+        print('Daily reminder to users executed')
+        return {"status": "success"}
+
 
 celery.conf.beat_schedule = {
     'daily': {
-      'task': 'main.daily_reminder_to_professional',  # Ensure this is the correct path to your task
-      'schedule': crontab(minute='*'),
-  }
+        # Ensure this is the correct path to your task
+        'task': 'main.daily_reminder_to_professional',
+        'schedule': crontab(minute='*'),
+    }
 }
+
 
 @celery.task()
 def monthly_report():
@@ -816,7 +822,8 @@ def get_service_requests():
                 'address': customer.address,
                 'pincode': customer.pincode,
                 'date': booking.date.strftime('%Y-%m-%d'),
-                'remarks': booking.remarks
+                'remarks': booking.remarks,
+                'status': booking.status
             }
             booking_list.append(booking_data)
 
@@ -884,14 +891,11 @@ def reject_service(booking_id):
 @jwt_required()
 def get_provider_today_services(provider_id):
     today = date.today()
-    print('today', today)
     today_bookings = Booking.query.filter_by(
-        date=today, provider_id=provider_id).all()
-    print('today_bookings', today_bookings)
+        date=today, provider_id=provider_id, status='approved').all()
     response = []
     for booking in today_bookings:
         customer = Customer.query.get(booking.customer_id)
-        print('customer', customer, booking.customer_id)
         response.append({
             'id': booking.id,
             'customer_id': booking.customer_id,
@@ -982,21 +986,22 @@ def get_provider_closed_services(provider_id):
 @jwt_required()
 def service_history(customer_id):
     bookings = Booking.query.filter_by(customer_id=customer_id).all()
-    
+
     response = []
     for booking in bookings:
         professional = Provider.query.get(booking.provider_id)
+        service = Services.query.get(booking.service_id)
         response.append({
             'id': booking.id,
             'professional_id': booking.provider_id,
             'service_id': booking.service_id,
+            'service_name': service.services,
             'professional_name': professional.fullname,
             'date': booking.date.strftime('%Y-%m-%d'),
             'status': booking.status
         })
 
     return jsonify(response), 200
-
 
 
 @app.route("/protected", methods=["GET"])
