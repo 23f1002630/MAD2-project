@@ -19,6 +19,7 @@
                 <button @click="requestProfessional(professional)" class="btn btn-primary">Request</button>
             </div>
         </div>
+
         <div class="card mt-4 p-4">
             <h4 class="mb-3">Service History</h4>
             <table class="table table-bordered">
@@ -27,31 +28,17 @@
                         <th>ID</th>
                         <th>Service Name</th>
                         <th>Professional Name</th>
-                        <th>Phone</th>
+                        <th>Date</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Cleaning Services</td>
-                        <td>John Doe</td>
-                        <td>123-456-7890</td>
-                        <td><span class="badge bg-warning text-dark">Close it?</span></td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Maintenance and Repair</td>
-                        <td>Jane Smith</td>
-                        <td>987-654-3210</td>
-                        <td><span class="badge bg-success text-white">Closed</span></td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>Landscaping and Gardening</td>
-                        <td>Mike Johnson</td>
-                        <td>555-555-5555</td>
-                        <td><span class="badge bg-info text-white">Requested</span></td>
+                    <tr v-for="service in serviceRequests" :key="service.id">
+                        <td>{{ service.id }}</td>
+                        <td>{{ service.services }}</td>
+                        <td>{{ service.professional }}</td>
+                        <td>{{ service.date }}</td>
+                        <!-- <td><span class="badge bg-warning text-dark">Close it?</span></td> -->
                     </tr>
                 </tbody>
             </table>
@@ -162,6 +149,7 @@ export default {
             services: [],
             selectedService: {},
             selectedProfessional: {},
+            serviceRequests: [],
             bookingDetails: {
                 date: '', // Added date field
                 remarks: '' // Added remarks field

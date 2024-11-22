@@ -42,17 +42,10 @@ app.config['BROKER_CONNECTION_RETRY_ON_STARTUP'] = True
 app.config['CELERY_TIMEZONE'] = 'Asia/Kolkata'
 app.config['CACHE_TYPE'] = 'RedisCache'
 app.config['CACHE_REDIS_URL'] = "redis://localhost:6379/0"
+app.config['REDIS_URL'] = "redis://localhost:6379/3"
 cache = Cache(app)
 
-# CORS(app, resources={
-#     r"/api/*": {
-#         "origins": ["http://localhost:5173"],  # Vue.js development server
-#         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-#         "allow_headers": ["Content-Type", "Authorization"],
-#         "supports_credentials": True
-#     }
-# })
-# CORS(app, supports_credentials=True)
+
 CORS(app, origins='http://localhost:5173', supports_credentials=True)
 jwt = JWTManager(app)
 db.init_app(app)
@@ -66,46 +59,6 @@ if not admin_exist:
                 password=generate_password_hash("hisham999"))
     db.session.add(user)
     db.session.commit()
-
-# Create a route to authenticate your users and return JWTs. The
-# create_access_token() function is used to actually generate the JWT.
-# @app.route("/api/login", methods=["POST"])
-# def login():
-#     print('Entered login API')
-#     # Get JSON data from the request
-#     data = request.get_json()
-#     email = data.get("email", None)
-#     password = data.get("password", None)
-#     role=data.get("role",None)
-
-#     if not email or not password:
-#         return jsonify(error="Email and password are required"), 400
-
-#     # Log the received email and password
-#     print(f"Login attempt: email={email}, password={password}")
-#     if role=="admin":
-#     admin_exist = User.query.filter_by(email="hisham@gmail.com").first()
-#     if not admin_exist:
-#         user= User(email="hisham@gmail.com",
-#                 password=generate_password_hash("hisham999"))
-#         db.session.add(user)
-#         db.session.commit()
-#     user=User.query.filter_by(email=email).first()
-#     if user:
-#         # Verify the password
-#         if check_password_hash(user.password, password):
-#             # Create an access token for the user
-#             access_token = create_access_token(identity=user.email)
-#             response = jsonify(access_token=access_token)
-#             # Set access token cookies in the response
-#             set_access_cookies(response, access_token)
-#             return response
-#         else:
-#             # Return error if the password is incorrect
-#             return jsonify(error="Invalid credentials"), 401
-#     else:
-#         # Return error if the user doesn't exist
-#         return jsonify(error="User not found"), 404
 
 # ------- Celery app ------- #
 celery = Celery('Application')
@@ -163,6 +116,47 @@ def role_required(role):
     return decorator
 
 
+mail = init_mail()
+
+
+@celery.task()
+def daily_reminder_to_professional():
+  with app.app_context():
+      professionals = Provider.query.all()
+      for prof in professionals:
+          # Check if there are any pending bookings for the professional
+          pending_booking_exists = Booking.query.filter_by(provider_id=prof.id, status='pending').first() is not None
+
+          if pending_booking_exists:
+              with mail.connect() as conn:
+                  subject = "Home Master Reminder"
+                  message = """
+                      <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+                          <h1 style="color: #28a745;">Reminder: Visit Home Master</h1>
+                          <p>This is a friendly reminder to visit Home Master and check your pending requests. Customers are waiting for you!</p>
+                          <p>Don't miss out any requests. Click the link below to start your Home Master
+                              experience:</p>
+                          <a href="http://127.0.0.1:5000/" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: #fff; text-decoration: none; border-radius: 5px;">Visit Home Master</a>
+                          <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+                          <p>Thank you for choosing Home Master!</p>
+                          <p>Best regards,<br>Home Master</p>
+                      </div>
+                      """
+                  msg = Message(recipients=[prof.emailid], html=message, subject=subject)
+                  conn.send(msg)
+
+              sse.publish({"message": "You have not placed any order, please place now!", "color": "alert alert-primary"}, type=prof.emailid)
+
+      print('Daily reminder to users executed')
+      return {"status": "success"}
+
+celery.conf.beat_schedule = {
+    'daily': {
+      'task': 'main.daily_reminder_to_professional',  # Ensure this is the correct path to your task
+      'schedule': crontab(minute='*'),
+  }
+}
+
 @celery.task()
 def monthly_report():
     print('monthly report to users executed')
@@ -176,16 +170,16 @@ def user_triggered_async_job():
 
 
 # ------- To schedule the tasks --------#
-celery.conf.beat_schedule = {
-    'my_daily_task': {
-        'task': "main.monthly_report",
-        'schedule': crontab(hour=21, minute=0),
-    },
-    'my_quick_check_task': {
-        'task': "main.monthly_report",
-        'schedule': crontab(minute='*/1'),
-    },
-}
+# celery.conf.beat_schedule = {
+#     'my_daily_task': {
+#         'task': "main.monthly_report",
+#         'schedule': crontab(hour=21, minute=0),
+#     },
+#     'my_quick_check_task': {
+#         'task': "main.monthly_report",
+#         'schedule': crontab(minute='*/1'),
+#     },
+# }
 
 
 @app.route("/api/login", methods=["POST"])
@@ -805,7 +799,7 @@ def get_service_requests():
     try:
         # Query pending bookings, ordered by most recent first
 
-        bookings = Booking.query.filter_by(status='pending', provider_id=current_user.id)\
+        bookings = Booking.query.filter_by(provider_id=current_user.id)\
             .order_by(desc(Booking.date))\
             .all()
 
@@ -889,7 +883,6 @@ def reject_service(booking_id):
 @app.route('/api/provider/today-services/<int:provider_id>', methods=['GET'])
 @jwt_required()
 def get_provider_today_services(provider_id):
-    print('hisham Hi hello')
     today = date.today()
     print('today', today)
     today_bookings = Booking.query.filter_by(
@@ -910,6 +903,7 @@ def get_provider_today_services(provider_id):
         })
 
     return jsonify(response), 200
+
 
 @app.route('/api/close-service/<int:booking_id>', methods=['POST'])
 @jwt_required()
@@ -982,7 +976,26 @@ def get_provider_closed_services(provider_id):
             'status': 'error',
             'message': str(e)
         }), 500
+
+
+@app.route('/api/service-history/<int:customer_id>', methods=['GET'])
+@jwt_required()
+def service_history(customer_id):
+    bookings = Booking.query.filter_by(customer_id=customer_id).all()
     
+    response = []
+    for booking in bookings:
+        professional = Provider.query.get(booking.provider_id)
+        response.append({
+            'id': booking.id,
+            'professional_id': booking.provider_id,
+            'service_id': booking.service_id,
+            'professional_name': professional.fullname,
+            'date': booking.date.strftime('%Y-%m-%d'),
+            'status': booking.status
+        })
+
+    return jsonify(response), 200
 
 
 

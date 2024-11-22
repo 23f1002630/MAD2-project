@@ -54,9 +54,9 @@
                         <td>{{ booking.date }}</td>
                         <td>{{ booking.address }} <br> pin: {{ booking.pincode }}</td>
                         <td>
-                            <button class="btn btn-primary btn-sm me-2"
+                            <button v-if="booking.status === 'pending'" class="btn btn-primary btn-sm me-2"
                                 @click="approveService(booking.id)">Approve</button>
-                            <button class="btn btn-primary btn-sm me-2"
+                            <button v-if="booking.status === 'pending'" class="btn btn-primary btn-sm me-2"
                                 @click="rejectService(booking.id)">Reject</button>
                         </td>
                     </tr>
