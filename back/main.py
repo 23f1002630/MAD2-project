@@ -989,17 +989,23 @@ def service_history(customer_id):
 
     response = []
     for booking in bookings:
-        professional = Provider.query.get(booking.provider_id)
+        #professional = Provider.query.get(booking.provider_id)
+        #name = Booking.query.get(booking.provider_id)
+        professional_id = (booking.provider_id)
+        
+        name = Provider.query.with_entities(Provider.fullname).filter_by(id=professional_id).first()
+       
         service = Services.query.get(booking.service_id)
         response.append({
             'id': booking.id,
             'professional_id': booking.provider_id,
             'service_id': booking.service_id,
             'service_name': service.services,
-            'professional_name': professional.fullname,
+            'professional_name': name[0],
             'date': booking.date.strftime('%Y-%m-%d'),
             'status': booking.status
         })
+        print(response)
 
     return jsonify(response), 200
 
