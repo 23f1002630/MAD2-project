@@ -3,6 +3,7 @@ from flask import jsonify, abort
 from flask import request
 from database import db
 from sqlalchemy import and_, desc
+from sqlalchemy.orm import Session
 from models import *
 from models import user as User
 from datetime import datetime
@@ -765,6 +766,7 @@ def create_booking():
     service_id = data.get('service_id')
     remarks = data.get('remarks')
     booking_date = data.get('date')
+    print(booking_date,type(booking_date))
 
     if not all([provider_id, customer_id, service_id, remarks, booking_date]):
         return jsonify({'error': 'Missing required fields'}), 400
@@ -1006,7 +1008,6 @@ def service_history(customer_id):
             'date': booking.date.strftime('%Y-%m-%d'),
             'status': booking.status
         })
-        print(response)
 
     return jsonify(response), 200
 
@@ -1023,6 +1024,62 @@ def delete_booking(booking_id):
     db.session.delete(booking)
     db.session.commit()
     return jsonify({"message": "Booking deleted successfully"}), 200
+
+
+@app.route('/api/bookings/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_booking(id):
+  try:
+      # Ensure the request content type is application/json
+      if request.content_type != 'application/json':
+          return jsonify({"error": "Content-Type must be application/json"}), 415
+
+      # Use the current session to get the booking
+      session: Session = db.session
+      booking = session.get(Booking, id)
+
+      if not booking:
+          return jsonify({"error": "Booking not found"}), 404
+
+      data = request.json
+      booking.remarks = data.get('remarks', booking.remarks)
+
+      # Convert date string to a date object
+      date_str = data.get('date')
+      if date_str:
+          try:
+              booking.date = datetime.strptime(date_str, '%Y-%m-%d').date()
+          except ValueError:
+              return jsonify({"error": "Invalid date format, should be YYYY-MM-DD"}), 400
+
+      session.commit()
+
+      booking_data = {
+          "id": booking.id,
+          "remarks": booking.remarks,
+          "date": booking.date.strftime('%Y-%m-%d') if booking.date else None
+      }
+      return jsonify(booking_data), 200
+
+  except Exception as e:
+      print(str(e))
+      return jsonify({"error": "Internal Server Error"}), 500
+
+
+@app.route('/api/bookings/<id>', methods=['GET'])
+@jwt_required()
+def get_booking_details(id):
+    try:
+        booking = Booking.query.get(id)
+        booking_details = {
+            "id": booking.id,
+            "remarks": booking.remarks,
+            "date": booking.date.strftime('%Y-%m-%d')
+        }
+
+        return jsonify(booking_details), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/protected", methods=["GET"])

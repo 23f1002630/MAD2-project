@@ -1,4 +1,3 @@
-vue
 <template>
     <div v-if="isCustomer" class="container my-5">
         <CustomerBar />
@@ -42,7 +41,7 @@ vue
                         <td>
                             <p>{{ service.status }}</p>
                             <button v-if="service.status === 'pending'" class="btn btn-primary"
-                                @click="editBooking(service.id)">
+                                @click="startEditing(service.id)">
                                 Edit</button>
                             <button v-if="service.status === 'pending'" class="btn btn-danger"
                                 @click="deleteBooking(service.id)"> Delete</button>
@@ -54,7 +53,7 @@ vue
             </table>
         </div>
 
-        <!-- Modal -->
+        <!-- Request Modal -->
         <div v-show="requestModal" class="modal fade" id="requestModal" tabindex="-1"
             aria-labelledby="requestModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -95,6 +94,38 @@ vue
                 </div>
             </div>
         </div>
+
+        <!-- Edit Booking Modal -->
+        <div v-show="editBookingModal" class="modal fade" id="bookingeditModal" tabindex="-1"
+            aria-labelledby="serviceModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="bookingeditModal">Update Request</h1>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="updateBooking(bookingseditDetails)">
+                            <div class="mb-3">
+                                <label for="remarks-text" class="col-form-label">Remarks:</label>
+                                <textarea class="form-control" id="remarks-text"
+                                    v-model="bookingseditDetails.remarks"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="date" class="col-form-label">Date:</label>
+                                <input type="date" class="form-control" id="date" v-model="bookingseditDetails.date"
+                                    required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button @click="closeEditModal" type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button @click="updateBooking(bookingseditDetails)" type="submit"
+                            class="btn btn-primary">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div v-else>
         <p>Unauthorized access. Redirecting...</p>
@@ -118,7 +149,13 @@ export default {
             services: [],
             selectedService: {},
             selectedProfessional: {},
-            bookings: [], // Ensure this is used for service history
+            bookings: [],
+            editBookingModal: null,
+            bookingseditDetails: {
+                id: null,
+                date: '',
+                remarks: ''
+            },
             bookingDetails: {
                 date: '',
                 remarks: ''
@@ -147,43 +184,85 @@ export default {
                 const response = await axios.get(`http://127.0.0.1:5000/api/service-history/${customerId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
-                    },
-                    withCredentials: true
+                    }
                 });
 
                 if (response.data && response.status === 200) {
-                    console.log('Service History:', response.data); // Log the data
-                    this.bookings = response.data; // Ensure this is the correct assignment
+                    this.bookings = response.data;
                 }
             } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    localStorage.removeItem('jwt');
-                    localStorage.removeItem('role');
-                    this.$router.push('/');
-                }
-                console.error("Error fetching service history:", error);
+                this.handleError(error);
             }
+        },
+
+        updateBooking(bookingDetails) {
+            let your_jwt_token = localStorage.getItem('jwt');
+
+            if (!your_jwt_token) {
+                console.error('JWT token is missing');
+                this.$router.push('/login');
+                return;
+            }
+
+            if (!bookingDetails.id) {
+                console.error('Booking ID is missing');
+                return;
+            }
+
+            axios.put(`http://127.0.0.1:5000/api/bookings/${bookingDetails.id}`, bookingDetails, {
+                headers: {
+                    Authorization: `Bearer ${your_jwt_token}`
+                }
+            })
+                .then(response => {
+                    this.fetchServiceHistory();
+                    this.closeEditModal();
+                })
+                .catch(error => {
+                    this.handleError(error);
+                });
+        },
+
+        getBookingDetails(id) {
+            let your_jwt_token = localStorage.getItem('jwt');
+            axios.get(`http://127.0.0.1:5000/api/bookings/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${your_jwt_token}`
+                }
+            }).then(response => {
+                this.bookingseditDetails = response.data;
+            })
+                .catch(error => {
+                    this.handleError(error);
+                });
+        },
+
+        showEditModal() {
+            this.editBookingModal = new bootstrap.Modal('#bookingeditModal', {
+                keyboard: false
+            });
+            this.editBookingModal.show();
+        },
+
+        startEditing(id) {
+            this.getBookingDetails(id);
+            this.showEditModal();
         },
 
         async deleteBooking(id) {
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
-                const response = await axios.delete('http://127.0.0.1:5000/api/bookings/' + id, {
+                const response = await axios.delete(`http://127.0.0.1:5000/api/bookings/${id}`, {
                     headers: {
                         Authorization: `Bearer ${your_jwt_token}`
-                    },
-                    withCredentials: true
+                    }
                 });
-                console.log("Booking deleted:", response.data);
                 this.fetchServiceHistory();
             } catch (error) {
-                if (error.response && error.response.status === 401) {
-                    this.$router.push('/');
-                }
-                console.error("Error deleting booking:", error);
+                this.handleError(error);
             }
         },
-                
+
         checkCustomerStatus() {
             const role = localStorage.getItem('role');
             const token = localStorage.getItem('jwt');
@@ -199,11 +278,10 @@ export default {
         async selectService(id) {
             try {
                 let your_jwt_token = localStorage.getItem('jwt');
-                const response = await axios.get('http://127.0.0.1:5000/api/getprovidersbyservice/' + id, {
+                const response = await axios.get(`http://127.0.0.1:5000/api/getprovidersbyservice/${id}`, {
                     headers: {
                         Authorization: `Bearer ${your_jwt_token}`
-                    },
-                    withCredentials: true
+                    }
                 });
                 if (response.data) {
                     this.selectedprofessional = response.data;
@@ -245,13 +323,13 @@ export default {
                 }, {
                     headers: {
                         Authorization: `Bearer ${your_jwt_token}`
-                    },
-                    withCredentials: true
+                    }
                 });
 
                 if (response.data) {
                     alert('Booking successful!');
                     this.closeModal();
+                    this.fetchServiceHistory();
                 }
 
             } catch (error) {
@@ -267,6 +345,13 @@ export default {
             }
         },
 
+        closeEditModal() {
+            if (this.editBookingModal) {
+                this.editBookingModal.hide();
+                this.bookingseditDetails = { id: null, date: '', remarks: '' };
+            }
+        },
+
         async fetchServices() {
             if (!this.isCustomer) return;
 
@@ -275,8 +360,7 @@ export default {
                 const response = await axios.get('http://127.0.0.1:5000/api/services', {
                     headers: {
                         Authorization: `Bearer ${your_jwt_token}`
-                    },
-                    withCredentials: true
+                    }
                 });
                 if (response.data) {
                     this.services = response.data;
@@ -302,7 +386,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-/* Add any custom styles here */
-</style>
