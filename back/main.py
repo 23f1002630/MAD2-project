@@ -1,5 +1,5 @@
 from flask import Flask, url_for
-from flask import jsonify
+from flask import jsonify, abort
 from flask import request
 from database import db
 from sqlalchemy import and_, desc
@@ -989,12 +989,13 @@ def service_history(customer_id):
 
     response = []
     for booking in bookings:
-        #professional = Provider.query.get(booking.provider_id)
-        #name = Booking.query.get(booking.provider_id)
+        # professional = Provider.query.get(booking.provider_id)
+        # name = Booking.query.get(booking.provider_id)
         professional_id = (booking.provider_id)
-        
-        name = Provider.query.with_entities(Provider.fullname).filter_by(id=professional_id).first()
-       
+
+        name = Provider.query.with_entities(
+            Provider.fullname).filter_by(id=professional_id).first()
+
         service = Services.query.get(booking.service_id)
         response.append({
             'id': booking.id,
@@ -1008,6 +1009,20 @@ def service_history(customer_id):
         print(response)
 
     return jsonify(response), 200
+
+
+@app.route('/api/bookings/<int:booking_id>', methods=['DELETE'])
+def delete_booking(booking_id):
+    booking = Booking.query.get(booking_id)
+    if booking is None:
+        abort(404, description="Booking not found")
+
+    if booking.status != 'pending':
+        abort(400, description="Only pending bookings can be deleted")
+
+    db.session.delete(booking)
+    db.session.commit()
+    return jsonify({"message": "Booking deleted successfully"}), 200
 
 
 @app.route("/protected", methods=["GET"])
