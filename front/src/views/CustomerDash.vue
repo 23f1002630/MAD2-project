@@ -45,8 +45,10 @@
                                 Edit</button>
                             <button v-if="service.status === 'pending'" class="btn btn-danger"
                                 @click="deleteBooking(service.id)"> Delete</button>
+                            <button v-if="service.status === 'approved'" class="btn btn-success"
+                                @click="closeService(service.id)">Close</button>
                             <button v-if="service.status === 'closed'" class="btn btn-success"
-                                @click="openPopover(service.id)">Close</button>
+                                @click="openPopover(service.id)">Rate</button>
                         </td>
                     </tr>
                 </tbody>
@@ -211,6 +213,7 @@ export default {
         if (this.isCustomer) {
             this.fetchServices();
             this.fetchServiceHistory();
+            this.fetchTodayServices();
         }
     },
 
@@ -299,6 +302,61 @@ export default {
                 this.fetchServiceHistory();
             } catch (error) {
                 this.handleError(error);
+            }
+        },
+
+        async closeService(serviceId) {
+            if (!this.isCustomer) return;
+
+            try {
+                const token = localStorage.getItem('jwt');
+                const customerId = localStorage.getItem('userId');
+
+                const response = await axios.post(`http://127.0.0.1:5000/api/close-service/${serviceId}`, {
+                    customerId: customerId
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data && response.data.status === 'success') {
+                    this.fetchTodayServices();
+                    window.location.reload();
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error closing service:", error);
+            }
+        },
+
+        async fetchTodayServices() {
+            try {
+                const token = localStorage.getItem('jwt');
+                const customerId = localStorage.getItem('userId');
+
+                const response = await axios.get(`http://127.0.0.1:5000/api/today-services/${customerId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+
+                if (response.data) {
+                    this.todayServices = response.data;
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('role');
+                    this.$router.push('/');
+                }
+                console.error("Error fetching today's services:", error);
             }
         },
 

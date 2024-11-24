@@ -1110,6 +1110,28 @@ def rate_booking(booking_id):
     })
 
 
+@app.route('/api/today-services/<int:customer_id>', methods=['GET'])
+@jwt_required()
+def get_today_services(customer_id):
+    today = date.today()
+    bookings = Booking.query.filter_by(
+        customer_id=customer_id, date=today, status='approved').all()
+    response = []
+    for booking in bookings:
+        professional = Provider.query.get(booking.provider_id)
+        service = Services.query.get(booking.service_id)
+        response.append({
+            'id': booking.id,
+            'professional_id': booking.provider_id,
+            'service_id': booking.service_id,
+            'service_name': service.services,
+            'professional_name': professional.fullname,
+            'date': booking.date.strftime('%Y-%m-%d'),
+            'status': booking.status
+        })
+    return jsonify(response), 200
+
+
 @app.route("/protected", methods=["GET"])
 @jwt_required()
 def protected():
