@@ -13,6 +13,7 @@ from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required, set_access_cookies, current_user
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
+from jinja2 import Template
 from datetime import timedelta
 from celery.schedules import crontab
 # from config import LocalDevelopmentConfig
@@ -160,14 +161,33 @@ celery.conf.beat_schedule = {
         # Ensure this is the correct path to your task
         'task': 'main.daily_reminder_to_professional',
         'schedule': crontab(minute='*'),
+    },
+    'monthly': {
+        'task': 'main.monthly_entertainment_report_to_customers',
+        'schedule': crontab(minute='*'),
     }
 }
 
 
 @celery.task()
-def monthly_report():
-    print('monthly report to users executed')
-    return {'message': "Monthly report to users executed"}
+def monthly_entertainment_report_to_customers():
+    customers = Customer.query.all()
+    for cust in customers:
+        orders = Booking.query.filter_by(customer_id=cust.id).all()
+        with mail.connect() as conn:
+            subject = "Grocery App V2 Monthly Report"
+            template = Template("""
+                                   <p>Hi {{ name }},</p>
+                        
+                        """)
+
+            message = template.render(name=cust.fullname, orders=orders)
+            msg = Message(recipients=[cust.emailid],
+                          html=message, subject=subject)
+            conn.send(msg)
+    sse.publish({"message": "Monthly Report sent"}, type='notifyadmin')
+    sse.publish({"message": "Monthly Report sent"}, type='notifymanager')
+    return {"status": "success"}
 
 
 @celery.task()
