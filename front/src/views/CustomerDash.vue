@@ -46,7 +46,7 @@
                             <button v-if="service.status === 'pending'" class="btn btn-danger"
                                 @click="deleteBooking(service.id)"> Delete</button>
                             <button v-if="service.status === 'closed'" class="btn btn-success"
-                                @click="rateBooking(service.id)">Close</button>
+                                @click="openPopover(service.id)">Close</button>
                         </td>
                     </tr>
                 </tbody>
@@ -126,6 +126,39 @@
                 </div>
             </div>
         </div>
+
+        <!-- Popover Modal -->
+        <div v-show="popoverModal" class="modal fade" id="popoverModal" tabindex="-1"
+            aria-labelledby="popoverModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="popoverModalLabel">Rate Booking</h1>
+                    </div>
+                    <div class="modal-body">
+                        <p>Thank you for using our service. Please rate your experience.</p>
+                        <div class="mb-3">
+                            <label for="rating" class="col-form-label">Rating:</label>
+                            <div class="d-flex">
+                                <span v-for="star in 5" :key="star" @click="setRating(star)" class="star"
+                                    :class="{ 'text-warning': star <= feedbackDetails.rating, 'text-muted': star > feedbackDetails.rating }">
+                                    ★
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="feedback" class="col-form-label">Feedback:</label>
+                            <textarea class="form-control" id="feedback" v-model="feedbackDetails.feedback"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button @click="closePopover" type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Close</button>
+                        <button @click="submitFeedback" type="button" class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div v-else>
         <p>Unauthorized access. Redirecting...</p>
@@ -161,6 +194,12 @@ export default {
                 remarks: ''
             },
             requestModal: null,
+            popoverModal: null,
+            feedbackDetails: {
+                bookingId: null,
+                rating: 0,
+                feedback: ''
+            }
         }
     },
 
@@ -352,6 +391,50 @@ export default {
             }
         },
 
+        openPopover(id) {
+            this.feedbackDetails.bookingId = id;
+            this.popoverModal = new bootstrap.Modal('#popoverModal', {
+                keyboard: false
+            });
+            this.popoverModal.show();
+        },
+
+        closePopover() {
+            if (this.popoverModal) {
+                this.popoverModal.hide();
+                this.feedbackDetails = { bookingId: null, rating: 0, feedback: '' };
+            }
+        },
+
+        setRating(star) {
+            this.feedbackDetails.rating = star;
+        },
+
+        async submitFeedback() {
+            if (!this.feedbackDetails.bookingId) return;
+
+            try {
+                let your_jwt_token = localStorage.getItem('jwt');
+                const response = await axios.put(`http://127.0.0.1:5000/api/bookings/${this.feedbackDetails.bookingId}/rate`, {
+                    rating: this.feedbackDetails.rating,
+                    feedback: this.feedbackDetails.feedback
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${your_jwt_token}`
+                    }
+                });
+
+                if (response.data) {
+                    alert('Feedback submitted successfully!');
+                    this.closePopover();
+                    this.fetchServiceHistory();
+                }
+
+            } catch (error) {
+                this.handleError(error);
+            }
+        },
+
         async fetchServices() {
             if (!this.isCustomer) return;
 
@@ -386,3 +469,18 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.star {
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.text-warning {
+    color: #ffc107;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+</style>

@@ -54,3 +54,4 @@ class Booking(db.Model):
     date = db.Column(db.Date, default=date.today)
     status = db.Column(db.String, default="pending")
     rating = db.Column(db.Integer, nullable=True)   
+    feedback = db.Column(db.String, nullable=True)
