@@ -337,91 +337,6 @@ def cust_reg():
 
     return jsonify({"msg": "Registration successful", "emailid": emailid}), 201
 
-# @app.route('/customer/register', methods=['POST'])
-# def customer():
-#     if request.method == "" :
-#         user = Customer.query.filter_by(id==user_id).first()
-#         if user == None:
-#             return "Not found", 404
-#         else :
-#             return {"email":user.email,"phone" :user.phone} , 201
-
-#     elif request.method == "POST" :
-#             data = request.get_json()
-#             email = data.email
-#             password = data.password
-#             phone = data.phone
-#             address = data.address
-#             pincode = data.pincode
-
-#             user  = customer(email=email, password=generate_password_hash(password), phone = phone, address = address, pincode = pincode )
-#             db.session.add(user)
-#             db.session.commit()
-
-#     elif request.method == "PUT" :
-#         data = request.get_json
-#         email = data.email
-#         password = data.password
-#         phone = data.phone
-#         address = data.address
-#         pincode = data.pincode
-
-# old one
-# @app.route("/provider/register", methods=['POST'])
-# def provider_reg():
-#     if request.method != "POST":
-#         return jsonify({"error": "Invalid request method"}), 405
-
-#     data = request.get_json()
-#     emailid = data.get("emailid")
-#     password = data.get("password")
-#     fullname = data.get("fullname")
-#     phone = data.get("phone")
-#     address = data.get("address")
-#     pincode = data.get("pincode")
-#     services = data.get("services")
-#     experience = data.get("experience")
-#     file = data.get("file")
-
-#     # Validate required fields
-#     if not password or password.strip() == "":
-#         return jsonify({"error": "Password cannot be empty"}), 400
-#     if not fullname or fullname.strip() == "":
-#         return jsonify({"error": "Full name cannot be empty"}), 400
-#     if not phone:
-#         return jsonify({"error": "Phone number cannot be empty"}), 400
-#     if not services:
-#         return jsonify({"error": "Services cannot be empty"}), 400
-#     if not experience:
-#         return jsonify({"error": "Experience cannot be empty"}), 400
-
-#     # Check if email or phone already exists
-#     print('emailid', emailid)
-#     if Provider.query.filter_by(emailid=emailid).first():
-#         return jsonify({"error": "Provider email already exists"}), 400
-#     if Provider.query.filter_by(phone=phone).first():
-#         return jsonify({"error": "Phone number already exists"}), 400
-
-#     # Hash the password
-#     hashed_password = generate_password_hash(password)
-
-#     # Create a new provider
-#     new_provider = Provider(
-#         emailid=emailid,
-#         password=hashed_password,
-#         fullname=fullname,
-#         phone=phone,
-#         address=address,
-#         pincode=pincode,
-#         services=services,
-#         experience=experience,
-#         file = file
-#     )
-
-#     db.session.add(new_provider)
-#     db.session.commit()
-
-#     return jsonify({"msg": "Provider registration successful", "emailid": emailid}), 201
 
 
 @app.route("/provider/register", methods=['POST'])
@@ -550,24 +465,6 @@ def get_customers():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# @app.route("/api/customer/profile", methods=["GET"])
-# @jwt_required()
-# def get_customer_profile():
-#     try:
-#         customer = Customer.query.get(current_user.id)
-#         customer_profile = {
-#             "id": customer.id,
-#             "name": customer.fullname,
-#             "email": customer.emailid,
-#             "phone": customer.phone,
-#             "address": customer.address,
-#             "pincode": customer.pincode,
-#             "isblocked": customer.isblocked
-#         }
-#         return jsonify(customer_profile), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/services", methods=["GET"])
 @cache.memoize(timeout=50)
@@ -669,29 +566,6 @@ def block_customer(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# @app.route('/api/deleteprofessional/<id>', methods=["DELETE"])
-# @jwt_required()
-# def delete_professional(id):
-#     try:
-#         professional = Provider.query.get(id)
-#         db.session.delete(professional)
-#         db.session.commit()
-#         return jsonify({"message": "Professional deleted successfully"}), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-
-# @app.route('/api/deletecustomer/<id>', methods=["DELETE"])
-# @jwt_required()
-# def delete_customer(id):
-#     try:
-#         customer = Customer.query.get(id)
-#         db.session.delete(customer)
-#         db.session.commit()
-#         return jsonify({"message": "Customer deleted successfully"}), 200
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/approveprofessional/<id>', methods=["POST"])
