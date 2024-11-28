@@ -16,13 +16,10 @@
             <input type="password" class="form-control" placeholder="Password"  v-model="password" />
           </div>
           <div class="col">
-            <input type="text" class="form-control" placeholder="Address"  v-model="address"/>
+            <input type="text" class="form-control" placeholder="Location"  v-model="address"/>
           </div>
         </div>
         <div class="row mb-3">
-          <!-- <div class="col">
-            <input type="password" class="form-control" placeholder="Confirm password"  />
-          </div> -->
           <div class="col">
             <input type="text" class="form-control" placeholder="Pincode"  v-model="pincode"/>
           </div>

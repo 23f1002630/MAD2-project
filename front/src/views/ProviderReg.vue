@@ -38,7 +38,7 @@
             <input type="text" class="form-control" placeholder="Phone no" v-model="phone" />
           </div>
           <div class="col">
-            <input type="text" class="form-control" placeholder="Address" v-model="address" />
+            <input type="text" class="form-control" placeholder="Location" v-model="address" />
           </div>
         </div>
         <div class="row mb-3">

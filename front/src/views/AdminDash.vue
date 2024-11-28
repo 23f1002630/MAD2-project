@@ -71,7 +71,7 @@
                   <a class="btn btn-success btn-sm" :href="'http://localhost:5000/' + professional.file"
                     target="_blank">View File</a>
                   <!--  to view the image -->
-                  <!-- <img :src="'http://localhost:5000/' + professional.image" height="100px" width="100px">  -->
+                  <img :src="'http://localhost:5000/' + professional.image" height="100px" width="100px"> 
                 </div>
                 <div v-else-if="professional.isblocked">
                   <button class="btn btn-success btn-sm" @click="blockProfessional(professional.id)">Unblock</button>

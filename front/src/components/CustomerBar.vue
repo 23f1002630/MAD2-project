@@ -12,15 +12,6 @@
                         <a class="nav-link" href="/CustomerDash">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/customersearch">Search</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Stats</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" style="cursor: pointer;" @click="logout">Logout</a>
                     </li>
                 </ul>

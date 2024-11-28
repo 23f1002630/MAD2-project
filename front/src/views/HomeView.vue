@@ -21,7 +21,7 @@
                 <option value="" disabled selected>Select Role</option>
                 <option value="admin">Admin</option>
                 <option value="customer">Customer</option>
-                <option value="provider">Provider</option>
+                <option value="provider">Professional</option>
               </select>
             </div>
             <div class="d-flex justify-content-between">

@@ -9,16 +9,7 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" href="#">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Profile</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Search</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Stats</a>
+            <a class="nav-link" href="/providerdash">Home</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" style="cursor: pointer;" @click="logout">Logout</a>
