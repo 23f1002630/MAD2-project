@@ -22,7 +22,7 @@
               <a class="nav-link" href="#">Search</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Stats</a>
+              <a class="nav-link" href="/adminstats">Stats</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" style="cursor: pointer;" @click="logout">Logout</a>

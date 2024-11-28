@@ -1,4 +1,4 @@
-from flask import Flask, url_for
+from flask import Flask, url_for, send_file
 from flask import jsonify, abort
 from flask import request
 from flask import send_from_directory
@@ -23,6 +23,8 @@ from send_mail import init_mail
 from flask_mail import Message
 from flask_sse import sse
 from functools import wraps
+import matplotlib.pyplot as plt
+import io
 import os
 import csv
 
@@ -1044,6 +1046,35 @@ def get_provider_closed_services(provider_id):
             'status': 'error',
             'message': str(e)
         }), 500
+
+
+@app.route('/api/status-bar-graph', methods=['GET'])
+def status_bar_graph():
+    # Query the database for the count of each status
+    status_counts = db.session.query(
+        Booking.status, db.func.count(Booking.status)
+    ).group_by(Booking.status).all()
+
+    # Prepare data for the bar graph
+    statuses = [status for status, count in status_counts]
+    counts = [count for status, count in status_counts]
+
+    # Create the bar graph
+    plt.figure(figsize=(10, 6))
+    plt.bar(statuses, counts, color='skyblue')
+    plt.xlabel('Status')
+    plt.ylabel('Count')
+    plt.title('Booking Status Distribution')
+    plt.xticks(rotation=45)
+
+    # Save the plot to a BytesIO object
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plt.close()
+
+    # Return the image as a response
+    return send_file(img, mimetype='image/png')
 
 
 @app.route('/api/service-history/<int:customer_id>', methods=['GET'])

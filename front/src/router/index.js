@@ -6,6 +6,7 @@ import AdminDash from '../views/AdminDash.vue';
 import ProviderDash from '../views/ProviderDash.vue';
 import CustomerDash from '../views/CustomerDash.vue';
 import CustomerSearch from '../views/CustomerSearch.vue';
+import AdminStats from '../views/AdminStats.vue';
 
 
 const router = createRouter({
@@ -46,6 +47,11 @@ const router = createRouter({
             name: 'CustomerSearch',
             component: CustomerSearch,
             meta: { requiresCustomer: true }
+        },
+        {
+          path: '/adminstats',
+          name: 'AdminStats',
+          component: AdminStats
         }
 
     ]
