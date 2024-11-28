@@ -1,7 +1,7 @@
 <template>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
-        <a class="navbar-brand" href="#">Admin Dashboard</a>
+        <a class="navbar-brand" href="/admindash">Admin Dashboard</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -16,10 +16,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link" href="#">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Search</a>
+              <a class="nav-link" href="/admindash">Home</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/adminstats">Stats</a>

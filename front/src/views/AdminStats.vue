@@ -1,5 +1,8 @@
 <template>
-    <div>
+    <header>
+        <AdminBar />
+    </header>
+    <div class="card mb-2 container">
         <h1>Booking Status Bar Graph</h1>
         <img v-if="graphUrl" :src="graphUrl" alt="Bar Graph">
         <p v-else>Loading...</p>
@@ -7,8 +10,13 @@
 </template>
 
 <script>
+import AdminBar from '../components/AdminBar.vue';
 export default {
     name: 'BarGraph',
+    components: {
+        AdminBar
+    },
+
     data() {
         return {
             graphUrl: null
