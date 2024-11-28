@@ -134,12 +134,12 @@
           </thead>
           <tbody>
             <!-- Example row -->
-            <tr>
-              <td>1</td>
-              <td>John Doe</td>
-              <td>Service A</td>
-              <td>2023-10-30</td>
-              <td>Pending</td>
+            <tr v-for="service in bookings" :key="service.id">
+              <td>{{ service.id }}</td>
+              <td>{{ service.professional_name }}</td>
+              <td>{{ service.service_name }}</td>
+              <td>{{ service.date }}</td>
+              <td>{{ service.status }}</td>
             </tr>
           </tbody>
         </table>
@@ -245,6 +245,7 @@ export default {
       professionals: [], // Initialize an empty array to store professionals
       customers: [],
       services: [],
+      bookings: [],
       serviceseditDetails: {},
       myModal: null,
       serviceform: false,
@@ -268,6 +269,7 @@ export default {
       this.fetchProfessionals();
       this.fetchServices();
       this.fetchCustomers();
+      this.fetchServiceHistory();
     }
 
   },
@@ -287,6 +289,27 @@ export default {
     },
   },
   methods: {
+
+    async fetchServiceHistory() {
+      try {
+        const token = localStorage.getItem('jwt');
+
+        // Make a request to the modified endpoint that retrieves all bookings
+        const response = await axios.get('http://127.0.0.1:5000/api/admin/service-history', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.data && response.status === 200) {
+          this.bookings = response.data;
+        }
+      } catch (error) {
+        this.handleError(error);
+      }
+    },
+
+
     checkAdminStatus() {
       const role = localStorage.getItem('role');
       const token = localStorage.getItem('jwt');

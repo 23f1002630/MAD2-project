@@ -1031,6 +1031,34 @@ def service_history(customer_id):
 
     return jsonify(response), 200
 
+# admindashboard service history table
+
+
+@app.route('/api/admin/service-history', methods=['GET'], endpoint='admin_service_history')
+@jwt_required()
+def admin_service_history():
+    bookings = Booking.query.all()
+
+    response = []
+    for booking in bookings:
+        professional_id = booking.provider_id
+        name = Provider.query.with_entities(
+            Provider.fullname).filter_by(id=professional_id).first()
+
+        service = Services.query.get(booking.service_id)
+        response.append({
+            'id': booking.id,
+            'customer_id': booking.customer_id,
+            'professional_id': booking.provider_id,
+            'service_id': booking.service_id,
+            'service_name': service.services,
+            'professional_name': name[0] if name else None,
+            'date': booking.date.strftime('%Y-%m-%d'),
+            'status': booking.status
+        })
+
+    return jsonify(response), 200
+
 
 @app.route('/api/bookings/<int:booking_id>', methods=['DELETE'])
 def delete_booking(booking_id):
