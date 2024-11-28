@@ -1,32 +1,36 @@
 <template>
   <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="container">
+      <!-- Home Button -->
+      <div class="home-button">
+        <button @click="goHome" class="btn btn-outline-primary">Home</button>
+      </div>
       <h2 class="text-center mb-4 text-primary">Customer Signup</h2>
-      <form  @submit.prevent="register">
+      <form @submit.prevent="register">
         <div class="row mb-3">
           <div class="col">
-            <input type="email" class="form-control" placeholder="Email"  v-model="emailid" />
+            <input type="email" class="form-control" placeholder="Email" v-model="emailid" />
           </div>
           <div class="col">
-            <input type="text" class="form-control" placeholder="Full name"  v-model="fullname"/>
+            <input type="text" class="form-control" placeholder="Full name" v-model="fullname" />
           </div>
         </div>
         <div class="row mb-3">
           <div class="col">
-            <input type="password" class="form-control" placeholder="Password"  v-model="password" />
+            <input type="password" class="form-control" placeholder="Password" v-model="password" />
           </div>
           <div class="col">
-            <input type="text" class="form-control" placeholder="Location"  v-model="address"/>
-          </div>
-        </div>
-        <div class="row mb-3">
-          <div class="col">
-            <input type="text" class="form-control" placeholder="Pincode"  v-model="pincode"/>
+            <input type="text" class="form-control" placeholder="Location" v-model="address" />
           </div>
         </div>
         <div class="row mb-3">
           <div class="col">
-            <input type="text" class="form-control" placeholder="Phone no"  v-model="phone"/>
+            <input type="text" class="form-control" placeholder="Pincode" v-model="pincode" />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col">
+            <input type="text" class="form-control" placeholder="Phone no" v-model="phone" />
           </div>
         </div>
         <div class="text-center">
@@ -37,7 +41,6 @@
   </div>
 </template>
 
-
 <script>
 import axios from 'axios';
 
@@ -46,12 +49,11 @@ export default {
   data() {
     return {
       emailid: "",
-      fullname:"",
+      fullname: "",
       password: "",
       address: "",
       pincode: "",
-      phone:"",
-
+      phone: "",
     };
   },
   methods: {
@@ -59,20 +61,20 @@ export default {
       try {
         const response = await axios.post('http://127.0.0.1:5000/customer/register', 
         {
-          "emailid": this.emailid,   // Make sure the field names match the backend expectation
-          "fullname":this.fullname,
-          "password": this.password,
-          "address": this.address,
-          "pincode": this.pincode,
-          "phone":this.phone
+          emailid: this.emailid,
+          fullname: this.fullname,
+          password: this.password,
+          address: this.address,
+          pincode: this.pincode,
+          phone: this.phone,
         },
         {
           headers: {
-            'Content-Type': 'application/json'  // Ensure JSON data is correctly recognized
+            'Content-Type': 'application/json',
           }
         });
 
-        console.log(this.emailid, this.password,this.fullname,this.phone, this.address, this.pincode);
+        console.log(this.emailid, this.password, this.fullname, this.phone, this.address, this.pincode);
 
         if (response.status === 201) {
           this.$router.push('/');
@@ -82,8 +84,11 @@ export default {
       } catch (error) {
         alert('An error occurred: ' + error.message);
       }
-    }
-  }
+    },
+    goHome() {
+      this.$router.push('/'); // Redirect to the home page
+    },
+  },
 };
 </script>
 
@@ -97,5 +102,10 @@ export default {
 }
 * {
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+.home-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 </style>

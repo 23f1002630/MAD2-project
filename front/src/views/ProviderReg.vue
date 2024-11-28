@@ -1,6 +1,10 @@
 <template>
   <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="container">
+      <!-- Home Button -->
+      <div class="home-button">
+        <button @click="goHome" class="btn btn-outline-primary">Home</button>
+      </div>
       <h2 class="text-center mb-4 text-primary">Service provider Registration</h2>
       <form @submit.prevent="register">
         <div class="row mb-3">
@@ -9,7 +13,7 @@
           </div>
           <div class="col">
             <select class="form-control" v-model="selectedservice">
-              <option v-for="service in services" :key="service.id" :value="service.id">{{ service.services }}</option>            
+              <option v-for="service in services" :key="service.id" :value="service.id">{{ service.services }}</option>
             </select>
           </div>
         </div>
@@ -60,55 +64,6 @@
 <script>
 import axios from 'axios';
 
-// export default {
-//   name: 'ProviderReg',
-//   data() {
-//     return {
-//       emailid: "",
-//       fullname:"",
-//       password: "",
-//       address: "",
-//       pincode: "",
-//       phone:"",
-//       experience:"",
-//       services:""
-//     };
-//   },
-//   methods: {
-//     async register() {
-//       try {
-//         const response = await axios.post('http://127.0.0.1:5000/provider/register', 
-//         {
-//           "emailid": this.emailid,   // Make sure the field names match the backend expectation
-//           "fullname":this.fullname,
-//           "password": this.password,
-//           "address": this.address,
-//           "pincode": this.pincode,
-//           "phone":this.phone,
-//           "experience":this.experience,
-//           "services":this.services,
-//           "file": this.file
-//         },
-//         {
-//           headers: {
-//             'Content-Type': 'application/json'  // Ensure JSON data is correctly recognized
-//           }
-//         });
-
-//         console.log(this.emailid, this.password,this.fullname,this.phone, this.address, this.pincode,this.experience,this.services,this.file);
-
-//         if (response.status === 201) {
-//           this.$router.push('/');
-//         } else {
-//           alert(response.data.error);
-//         }
-//       } catch (error) {
-//         alert('An error occurred: ' + error.message);
-//       }
-//     }
-//   }
-// };
-
 export default {
   data() {
     return {
@@ -123,7 +78,7 @@ export default {
       services: '',
       selectedservice: null,
       file: null,
-      image: null // Add a data property for the file
+      image: null, // Add a data property for the file
     };
   },
   mounted() {
@@ -134,9 +89,9 @@ export default {
       this.file = event.target.files[0]; // Get the file from the input
     },
     handleImageUpload(event) {
-      console.log('starting')
+      console.log('starting');
       this.image = event.target.files[0]; // Get the file from the input
-      console.log('ended')
+      console.log('ended');
     },
     async register() {
       try {
@@ -151,7 +106,6 @@ export default {
         formData.append('services', this.selectedservice);
         formData.append('file', this.file); // Append the file
         formData.append('image', this.image);
-        console.log('Hisham');
 
         const response = await axios.post('http://127.0.0.1:5000/provider/register', formData, {
           headers: {
@@ -175,16 +129,19 @@ export default {
         let your_jwt_token = localStorage.getItem('jwt');
         const response = await axios.get('http://127.0.0.1:5000/api/services', {
           headers: {
-            Authorization: `Bearer ${your_jwt_token}`
+            Authorization: `Bearer ${your_jwt_token}`,
           },
-          withCredentials: true
+          withCredentials: true,
         });
         this.services = response.data;
         console.log(this.services);
       } catch (error) {
-        console.error("Error fetching services:", error);
+        console.error('Error fetching services:', error);
       }
-    }
+    },
+    goHome() {
+      this.$router.push('/'); // Redirect to the home page
+    },
   },
 };
 </script>
@@ -200,5 +157,11 @@ export default {
 
 * {
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.home-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 </style>
