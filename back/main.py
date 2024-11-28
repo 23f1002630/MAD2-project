@@ -1,6 +1,7 @@
 from flask import Flask, url_for
 from flask import jsonify, abort
 from flask import request
+from flask import send_from_directory
 from database import db
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
@@ -23,6 +24,7 @@ from flask_mail import Message
 from flask_sse import sse
 from functools import wraps
 import os
+import csv
 
 from flask_caching import Cache
 
@@ -134,16 +136,15 @@ def daily_reminder_to_professional():
                 with mail.connect() as conn:
                     subject = "Home Master Reminder"
                     message = """
-                      <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-                          <h1 style="color: #28a745;">Reminder: Visit Home Master</h1>
-                          <p>This is a friendly reminder to visit Home Master and check your pending requests. Customers are waiting for you!</p>
-                          <p>Don't miss out any requests. Click the link below to start your Home Master
-                              experience:</p>
-                          <a href="http://127.0.0.1:5000/" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: #fff; text-decoration: none; border-radius: 5px;">Visit Home Master</a>
-                          <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
-                          <p>Thank you for choosing Home Master!</p>
-                          <p>Best regards,<br>Home Master</p>
-                      </div>
+                      <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #e0f7fa; border-radius: 10px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);">
+  <h1 style="color: #d32f2f;">Important: Check Your Home Master Dashboard</h1>
+  <p>We encourage you to log in to Home Master to review your pending tasks. Your attention is needed!</p>
+  <p>Stay on top of your requests by clicking the button below to access Home Master:</p>
+  <a href="http://127.0.0.1:5000/" style="display: inline-block; padding: 12px 25px; background-color: #d32f2f; color: #ffffff; text-decoration: none; border-radius: 8px;">Go to Home Master</a>
+  <p>For any inquiries or support, please reach out to our team.</p>
+  <p>Thank you for your dedication to Home Master!</p>
+  <p>Kind regards,<br>The Home Master Team</p>
+</div>
                       """
                     msg = Message(
                         recipients=[prof.emailid], html=message, subject=subject)
@@ -175,7 +176,7 @@ def monthly_entertainment_report_to_customers():
     for cust in customers:
         orders = Booking.query.filter_by(customer_id=cust.id).all()
         with mail.connect() as conn:
-            subject = "Grocery App V2 Monthly Report"
+            subject = "Home Master Monthly Report"
             template = Template("""
                                    <p>Hi {{ name }},</p>
                         
@@ -190,11 +191,32 @@ def monthly_entertainment_report_to_customers():
     return {"status": "success"}
 
 
-@celery.task()
-def user_triggered_async_job():
-    print('user triggered async job executed')
-    return {'message': "User triggered async job executed"}
+@celery.task(name='Application.export_service_requests')
+def export_service_requests():
+    # Query the database for closed service requests
+    closed_requests = Booking.query.filter_by(status='closed').all()
 
+   # Path to save the CSV file
+    csv_directory = 'csvfiles'
+    csv_filename = 'service_requests.csv'
+    file_path = os.path.join(csv_directory, csv_filename)
+
+    # Ensure the directory exists
+    if not os.path.exists(csv_directory):
+        os.makedirs(csv_directory)
+
+    # Write data to CSV
+    with open(file_path, mode='w', newline='') as csv_file:
+        writer = csv.writer(csv_file)
+        # Write the header
+        writer.writerow(['Service ID', 'Customer ID',
+                        'Professional ID', 'Date of Request', 'Remarks'])
+        # Write the data
+        for request in closed_requests:
+            writer.writerow([request.service_id, request.customer_id,
+                            request.provider_id, request.date, request.remarks])
+
+    return {"status": "success"}
 
 # ------- To schedule the tasks --------#
 # celery.conf.beat_schedule = {
@@ -247,6 +269,26 @@ def login():
 
     # create a function called services --services table query all-- list=[ define all the required colmns in json format] --return jsonify(list)--try catch return json status codes
     # this.listname=response.data  /// data return listname=[] ///for key,index in listname
+
+
+@app.route('/export-csv', methods=['POST'])
+def export_csv():
+    export_service_requests.delay()
+    return jsonify({"task_id": 33333333}), 202
+
+
+@app.route('/download_service_bookings', methods=['GET'])
+def download_service_requests():
+    # Path to the generated CSV file
+    csv_directory = 'csvfiles'
+    csv_filename = 'service_requests.csv'
+
+    # Check if the file exists
+    if os.path.exists(os.path.join(csv_directory, csv_filename)):
+        # Send the file to the user for download
+        return send_from_directory(csv_directory, csv_filename, as_attachment=True)
+    else:
+        return {'error': 'CSV file not found. The export task may still be in progress.'}, 404
 
 
 @app.route("/customer/register", methods=['POST'])

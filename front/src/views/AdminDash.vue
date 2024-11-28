@@ -121,6 +121,7 @@
 
     <div class="card mb-4">
       <div class="card-header">Service Requests</div>
+      <button @click="downloadCSV" class="btn btn-primary mb-3">Export as CSV</button>
       <div class="card-body">
         <table class="table">
           <thead>
@@ -133,7 +134,7 @@
             </tr>
           </thead>
           <tbody>
-            <!-- Example row -->
+
             <tr v-for="service in bookings" :key="service.id">
               <td>{{ service.id }}</td>
               <td>{{ service.professional_name }}</td>
@@ -309,6 +310,21 @@ export default {
       }
     },
 
+    downloadCSV() {
+        const token = localStorage.getItem('auth_token');  // Assuming you're storing the token in localStorage
+
+        axios.post('http://127.0.0.1:5000/export-csv')
+        .then(response => {
+            console.log('Export task triggered!');
+            // Optionally, wait for a few seconds for the task to complete and then allow download
+            setTimeout(() => {
+            window.location.href = 'http://127.0.0.1:5000/download_service_bookings';
+            }, 7000);  // Adjust the delay based on the expected task completion time
+        })
+        .catch(error => {
+            console.error('Error triggering export task:', error);
+        });
+    },
 
     checkAdminStatus() {
       const role = localStorage.getItem('role');
