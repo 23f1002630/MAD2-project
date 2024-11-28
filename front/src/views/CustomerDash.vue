@@ -3,8 +3,11 @@
         <CustomerBar />
         <div v-if="selectedprofessional.length === 0" class="card p-4 container">
             <h3 class="text-center text-primary mb-4">Our Services</h3>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Search" v-model="searchQuery" />
+            </div>
             <div class="d-flex justify-content-around flex-wrap">
-                <button v-for="service in services" :key="service.id" @click="selectService(service.id)"
+                <button v-for="service in filteredServices" :key="service.id" @click="selectService(service.id)"
                     class="btn btn-outline-primary m-2">{{ service.services }}</button>
             </div>
         </div>
@@ -201,7 +204,8 @@ export default {
                 bookingId: null,
                 rating: 0,
                 feedback: ''
-            }
+            },
+            searchQuery: '',
         }
     },
 
@@ -215,6 +219,22 @@ export default {
             this.fetchServiceHistory();
             this.fetchTodayServices();
         }
+    },
+
+    computed: {
+        filteredServices() {
+            // Filter services based on search query
+            return this.services.filter((service) => {
+                // const nameMatch = service.name
+                //     .toLowerCase()
+                //     .includes(this.searchQuery.toLowerCase());
+                const serviceMatch = service.services
+                    .toLowerCase()
+                    .includes(this.searchQuery.toLowerCase());
+                // return nameMatch || serviceMatch;
+                return serviceMatch;
+            });
+        },
     },
 
     methods: {
