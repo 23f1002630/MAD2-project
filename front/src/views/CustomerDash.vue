@@ -6,6 +6,9 @@
             <div class="mb-3">
                 <input type="text" class="form-control" placeholder="Search" v-model="searchQuery" />
             </div>
+            <div v-if="filteredServices.length === 0" class="text-center text-muted">
+                <p>No services found.</p>
+            </div>
             <div class="d-flex justify-content-around flex-wrap">
                 <button v-for="service in filteredServices" :key="service.id" @click="selectService(service.id)"
                     class="btn btn-outline-primary m-2">{{ service.services }}</button>
@@ -16,7 +19,7 @@
             <h3 class="text-center text-primary mb-4">Our Professionals</h3>
             <!-- Search Input for Professionals -->
             <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Search by Pincode or Address"
+                <input type="text" class="form-control" placeholder="Search"
                     v-model="professionalSearchQuery" />
             </div>
             <!-- No Results Message -->
@@ -251,7 +254,10 @@ export default {
                 const addressMatch = professional.address
                     .toLowerCase()
                     .includes(this.professionalSearchQuery.toLowerCase());
-                return pincodeMatch || addressMatch;
+                const nameMatch = professional.name
+                    .toLowerCase()
+                    .includes(this.professionalSearchQuery.toLowerCase());
+                return pincodeMatch || addressMatch || nameMatch;
             });
         },
     },
