@@ -172,24 +172,58 @@ celery.conf.beat_schedule = {
 }
 
 
+
 @celery.task()
 def monthly_entertainment_report_to_customers():
     customers = Customer.query.all()
     for cust in customers:
-        orders = Booking.query.filter_by(customer_id=cust.id).all()
-        with mail.connect() as conn:
-            subject = "Home Master Monthly Report"
-            template = Template("""
-                                   <p>Hi {{ name }},</p>
-                        
-                        """)
+        bookings = Booking.query.filter_by(customer_id=cust.id).all()
 
-            message = template.render(name=cust.fullname, orders=orders)
+        template = Template("""
+        <div style="max-width: 600px; margin: 20px auto; padding: 25px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); font-size: 14px;">
+                            <h1 style="color: #3F2312; text-align: center; margin-bottom: 20px;">Order Report</h1>
+                            <p style="color: #333;">Dear {{ name }},</p>
+                            <p style="color: #333;">Here is your monthly order report:</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; background-color: #fff; border: 1px solid #ddd;">
+                                <thead>
+                            <tr style="background-color: #3F2312; color: #fff;">
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Service Request ID</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Professional Email</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Date of Request</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Status</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Rating</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Feedback</th>
+                    </tr>
+                </thead>
+                <tbody>
+                            {% for booking in bookings %}
+                    <tr style="background-color: {% if loop.index % 2 == 0 %}#f2f2f2{% else %}#fff{% endif %};">
+                         <td style="padding: 10px; border: 1px solid #ddd;">{{ booking.id }}</td>
+                         <td style="padding: 10px; border: 1px solid #ddd;">{{ booking.professional.email if booking.professional else 'N/A' }}</td>
+                         <td style="padding: 10px; border: 1px solid #ddd;">{{ booking.date }}</td>
+                         <td style="padding: 10px; border: 1px solid #ddd;">{{ booking.status }}</td>
+                         <td style="padding: 10px; border: 1px solid #ddd;">{{ booking.rating if booking.rating else 'N/A' }}</td>
+                         <td style="padding: 10px; border: 1px solid #ddd;">{{ booking.feedback if booking.feedback else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p style="color: #333; margin-top: 20px;">If you have any questions or need further details, please don't hesitate to contact us.</p>
+            <p style="color: #333;">Thank you for your attention!</p>
+            <p style="margin-top: 20px; color: #555;">Best regards,<br><strong>HomeMaster Team</strong></p>
+        </div>
+        """)
+        message = template.render(name=cust.fullname, bookings=bookings)
+
+        with mail.connect() as conn:
+            subject = "Home Master Report"
             msg = Message(recipients=[cust.emailid],
                           html=message, subject=subject)
             conn.send(msg)
+
     sse.publish({"message": "Monthly Report sent"}, type='notifyadmin')
     sse.publish({"message": "Monthly Report sent"}, type='notifymanager')
+
     return {"status": "success"}
 
 
@@ -336,7 +370,6 @@ def cust_reg():
     db.session.commit()
 
     return jsonify({"msg": "Registration successful", "emailid": emailid}), 201
-
 
 
 @app.route("/provider/register", methods=['POST'])
@@ -565,7 +598,6 @@ def block_customer(id):
         return jsonify({"message": "Customer blocked successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 
 @app.route('/api/approveprofessional/<id>', methods=["POST"])
