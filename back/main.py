@@ -795,6 +795,7 @@ def get_service_requests():
                 'pincode': customer.pincode,
                 'date': booking.date.strftime('%Y-%m-%d'),
                 'remarks': booking.remarks,
+                'rating': booking.rating,
                 'status': booking.status
             }
             booking_list.append(booking_data)

@@ -44,6 +44,7 @@
                         <th>Phone</th>
                         <th>Date</th>
                         <th>Location</th>
+                        <th>Rating</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -54,6 +55,7 @@
                         <td>{{ booking.phone }}</td>
                         <td>{{ booking.date }}</td>
                         <td>{{ booking.address }} <br> pin: {{ booking.pincode }}</td>
+                        <td>{{ booking.rating }}</td>
                         <td>
                             <button v-if="booking.status === 'pending'" class="btn btn-primary btn-sm me-2"
                                 @click="approveService(booking.id)">Approve</button>
