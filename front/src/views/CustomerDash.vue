@@ -15,12 +15,12 @@
         <div v-else class="card p-4 container">
             <h3 class="text-center text-primary mb-4">Our Professionals</h3>
             <div v-for="professional in selectedprofessional" :key="professional.id" class="card p-4">
-                <h4>{{ professional.name }}</h4>
-                <p>{{ professional.experience }}</p>
-                <p>{{ professional.address }}</p>
-                <p>{{ professional.pincode }}</p>
-                <p>{{ professional.service }}</p>
-                <p>{{ professional.phone }}</p>
+                <h4>Professional Name: {{ professional.name }}</h4>
+                <p>Experience: {{ professional.experience }}</p>
+                <p>Location: {{ professional.address }}</p>
+                <p>Pincode: {{ professional.pincode }}</p>
+                <p>Service: {{ professional.service }}</p>
+                <p>Phone Number: {{ professional.phone }}</p>
                 <button @click="requestProfessional(professional)" class="btn btn-primary">Request</button>
             </div>
         </div>
