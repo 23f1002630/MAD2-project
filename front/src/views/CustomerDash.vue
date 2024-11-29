@@ -14,7 +14,17 @@
 
         <div v-else class="card p-4 container">
             <h3 class="text-center text-primary mb-4">Our Professionals</h3>
-            <div v-for="professional in selectedprofessional" :key="professional.id" class="card p-4">
+            <!-- Search Input for Professionals -->
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Search by Pincode or Address"
+                    v-model="professionalSearchQuery" />
+            </div>
+            <!-- No Results Message -->
+            <div v-if="filteredProfessionals.length === 0" class="text-center text-muted">
+                <p>No professionals found.</p>
+            </div>
+            <!-- Filtered Professionals -->
+            <div v-for="professional in filteredProfessionals" :key="professional.id" class="card p-4">
                 <h4>Professional Name: {{ professional.name }}</h4>
                 <p>Experience: {{ professional.experience }}</p>
                 <p>Location: {{ professional.address }}</p>
@@ -208,6 +218,7 @@ export default {
                 feedback: ''
             },
             searchQuery: '',
+            professionalSearchQuery: '', 
         }
     },
 
@@ -225,16 +236,22 @@ export default {
 
     computed: {
         filteredServices() {
-            // Filter services based on search query
             return this.services.filter((service) => {
-                // const nameMatch = service.name
-                //     .toLowerCase()
-                //     .includes(this.searchQuery.toLowerCase());
                 const serviceMatch = service.services
                     .toLowerCase()
                     .includes(this.searchQuery.toLowerCase());
-                // return nameMatch || serviceMatch;
                 return serviceMatch;
+            });
+        },
+        filteredProfessionals() {
+            return this.selectedprofessional.filter((professional) => {
+                const pincodeMatch = professional.pincode
+                    .toString()
+                    .includes(this.professionalSearchQuery.toLowerCase());
+                const addressMatch = professional.address
+                    .toLowerCase()
+                    .includes(this.professionalSearchQuery.toLowerCase());
+                return pincodeMatch || addressMatch;
             });
         },
     },

@@ -5,7 +5,6 @@ import CustomerReg from '../views/CustomerReg.vue';
 import AdminDash from '../views/AdminDash.vue';
 import ProviderDash from '../views/ProviderDash.vue';
 import CustomerDash from '../views/CustomerDash.vue';
-import CustomerSearch from '../views/CustomerSearch.vue';
 import AdminStats from '../views/AdminStats.vue';
 
 
@@ -41,12 +40,6 @@ const router = createRouter({
             path: '/customerdash',
             name: 'CustomerDash',
             component: CustomerDash
-        },
-        {
-            path: '/customersearch',
-            name: 'CustomerSearch',
-            component: CustomerSearch,
-            meta: { requiresCustomer: true }
         },
         {
           path: '/adminstats',
