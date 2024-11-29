@@ -31,3 +31,5 @@ back/.env
 *.vite
 *.zip
 *env
+*.pdf
+*.jpg
