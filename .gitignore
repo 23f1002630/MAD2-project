@@ -33,3 +33,4 @@ back/.env
 *env
 *.pdf
 *.jpg
+.csv
