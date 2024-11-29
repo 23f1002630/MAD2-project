@@ -17,6 +17,8 @@
             <div v-for="professional in selectedprofessional" :key="professional.id" class="card p-4">
                 <h4>{{ professional.name }}</h4>
                 <p>{{ professional.experience }}</p>
+                <p>{{ professional.address }}</p>
+                <p>{{ professional.pincode }}</p>
                 <p>{{ professional.service }}</p>
                 <p>{{ professional.phone }}</p>
                 <button @click="requestProfessional(professional)" class="btn btn-primary">Request</button>
