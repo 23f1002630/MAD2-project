@@ -306,7 +306,7 @@ export default {
             }
         },
 
-        async rejectService(serviceId) {
+        async rejectService(bookingId) {
             if (!this.isProvider) return;
 
             try {
